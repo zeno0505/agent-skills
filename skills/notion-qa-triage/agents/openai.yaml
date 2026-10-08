@@ -1,0 +1,4 @@
+interface:
+  display_name: "노션 프로젝트 QA 분류"
+  short_description: "프로젝트 QA의 기획 확인·설계 검토·수정·직접 확인 경로를 분류"
+  default_prompt: "Use $notion-qa-triage to inspect this Notion project URL, classify its open QA issues, and recommend how to handle each task."

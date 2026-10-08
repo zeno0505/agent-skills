@@ -1,6 +1,6 @@
 # agent-skills
 
-개인적으로 쓰는 에이전트 스킬 모음입니다. 각 스킬은 [Agent Skills](https://agentskills.io) 형식(`SKILL.md` + 선택적 `scripts/`, `references/`)을 따르고, Claude Code·Codex 등 `SKILL.md`를 읽는 런타임이면 어디서든 씁니다.
+개인적으로 쓰는 에이전트 스킬 모음입니다. 각 스킬은 [Agent Skills](https://agentskills.io) 형식(`SKILL.md` + 선택적 `scripts/`, `references/`, `agents/`)을 따르고, Claude Code·Codex 등 `SKILL.md`를 읽는 런타임이면 어디서든 씁니다.
 
 ## 설치
 
@@ -31,6 +31,7 @@ ln -sfn ~/.agents/skills ~/.claude/skills   # Claude Code — 기존 디렉터�
 | [`weekly-lesson-draft`](skills/weekly-lesson-draft) | 회고 교훈으로 주간 블로그 초안 작성, 작성자 승인 게이트 | — | 0.1.0 |
 | [`weekly-lesson-images`](skills/weekly-lesson-images) | 승인된 초안의 그림 준비 (Slidev 한 장 → PNG 또는 이미지 생성) | (선택) `slidev-pdf` | 0.1.0 |
 | [`weekly-lesson-publish`](skills/weekly-lesson-publish) | 승인본을 GitHub Pages 블로그 저장소에 발행 | git, gh | 0.1.0 |
+| [`notion-qa-triage`](skills/notion-qa-triage) | 노션 프로젝트의 열린 QA를 기획·디자인 확인 / 설계 고민 / 수정 방향 명확 / 사용자 직접 확인(첨부 미열람) 넷으로 나누고 다음 처리 제안 | 노션 읽기 도구(MCP 등) | 0.1.0 |
 | [`x-post-analysis`](skills/x-post-analysis) | X 게시글 원문·맥락을 먼저 확보하고 작성자 의도를 분리해 정리 | X 읽기 도구 | 0.1.0 |
 | [`slidev-pdf`](skills/slidev-pdf) | Slidev로 공유용 PDF 덱 생성 + 페이지별 시각 QA | Node, Slidev 53, playwright-chromium, poppler-utils, Python + Pillow | 0.1.0 |
 | [`plan-dag-stack`](skills/plan-dag-stack) | 프로젝트를 DAG(dag.yaml)로 계획, 라운드 단위 브랜치·PR | DAG 공통¹ | 0.1.0 |

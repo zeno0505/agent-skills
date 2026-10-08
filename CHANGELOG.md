@@ -18,6 +18,7 @@
 - `cross-agent-review` — 개인 노트 볼트에서 이관. Orca CLI 의존성 명시, 요청 템플릿을 `references/`로 분리.
 - `slack-reply-draft` — 에이전트 작업 공간 워크플로에서 이관. 런타임 전용 도구 이름과 내부 판단 사례를 빼고 일반화.
 - `weekly-lesson-draft`, `weekly-lesson-images`, `weekly-lesson-publish` — 에이전트 작업 공간 워크플로에서 이관. 발행 지표 기록 단계를 선택 사항으로 일반화.
+- `notion-qa-triage` — 개인 노트 볼트에서 이관. 열린 QA를 네 갈래(기획·디자인 확인 / 설계 고민 / 수정 방향 명확 / 사용자 직접 확인)로 분류. 노션 MCP가 첨부 이미지·영상 내용을 돌려주지 않는다는 주의를 추가하고, 프로젝트 고유 예시를 일반 예시로 바꿈. Codex용 `agents/openai.yaml` 포함.
 - `x-post-analysis` — 에이전트 작업 공간 워크플로에서 이관 (frontmatter 추가).
 - `slidev-pdf` — 신규 작성. 실제로 쓰던 Slidev 53 내보내기 절차(작성 규칙, `build.sh`, `preflight.py`, `qa_pages.py`, 최소 템플릿)와 페이지 시각 QA 체크리스트.
 - DAG 스택 11종 — `plan-`, `run-`, `review-`, `append-`, `track-`, `setup-`, `read-`, `set-`, `show-`, `summary-`, `migrate-dag-stack`. 개인 노트 볼트의 최신본에서 이관.
