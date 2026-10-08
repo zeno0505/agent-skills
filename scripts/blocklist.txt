@@ -1,0 +1,15 @@
+# Public blocklist — PCRE patterns (grep -P), one per line, case-insensitive unless prefixed with (?-i).
+# Private, organisation-specific terms (names, product codes) are NOT kept here; put them in
+# .blocklist.local (gitignored) for local runs and in the BLOCKLIST_EXTRA repository secret for CI.
+xox[abprs]-
+github_pat_[A-Za-z0-9_]{20,}
+\bgh[pousr]_[A-Za-z0-9]{30,}
+\bsk-[A-Za-z0-9]{20,}
+(?-i)\b[CUGDW]0[A-Z0-9]{8,10}\b
+(?<![0-9a-fA-F])[0-9a-f]{32}(?![0-9a-fA-F])
+\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b
+\.slack\.com/archives/
+/workspace/
+/home/box\b
+/Users/[a-z][a-z0-9._-]+/
+\binhouse\b
