@@ -1,9 +1,9 @@
 ---
-name: context-collector
+name: collect-dag-stack
 description: Use when starting a feature or fix workflow and needing to collect requirements from external sources (Notion, Jira, Figma, Slack) before any planning begins
 ---
 
-# Context Collector
+# Collect DAG Stack
 
 외부 소스에서 요구사항을 1회 수집하여 구조화된 `context.md`를 생성하고, `plan-dag-stack`으로 넘긴다.
 

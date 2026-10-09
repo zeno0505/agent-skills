@@ -33,7 +33,8 @@ git config remote.pushDefault origin   # avoid the remote picker when several re
    - `git checkout -b <branch> <base>`, then `set.py --round-add` with `state: planned`.
 4. For each `pending` task whose `depends_on` are all `done`, in dependency order:
    - `set.py --task <ID> --set status --value running`
-   - Dispatch the implementation to a subagent (one task, its `target_files`, its verification) or implement inline.
+   - Dispatch the implementation to a subagent (one task, its `target_files`, its verification; the subagent
+     follows `receive-dag-stack`) or implement inline.
      Implement only that task's scope; commit only its files.
    - Record the result: `--set commits` (hash list), `--set round` (the open round's number),
      `--set status --value committed`.

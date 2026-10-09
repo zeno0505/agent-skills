@@ -6,19 +6,22 @@
 
 ## [0.2.0] - 2026-10-10
 
-0.1.0 이관 때 빠진 DAG 스택 짝 스킬 `context-collector`를 추가하고, DAG 스택에서 `gh-stack`을 필수에서 선택으로 내렸습니다.
+0.1.0 이관 때 빠진 DAG 스택 짝 스킬 `collect-dag-stack`과 `receive-dag-stack`을 추가하고, DAG 스택에서 `gh-stack`을 필수에서 선택으로 내렸습니다.
 
 ### Added
 
-- `context-collector` — 개인 노트 볼트에서 이관. 계획 전 요구사항 수집(Notion·Jira·Figma·Slack → `context.md`, 원문별 출처·지문, 변경 이력은 덮어쓰지 않고 쌓기).
+- `collect-dag-stack` — 개인 노트 볼트에서 이관, DAG 스택 이름 규칙에 맞춰 이름을 바꿈. 계획 전 요구사항 수집(Notion·Jira·Figma·Slack → `context.md`, 원문별 출처·지문, 변경 이력은 덮어쓰지 않고 쌓기).
   - 핸드오프 대상을 `plan-dag-stack`으로 바꾸고, 출력 경로를 `plan-dag-stack`의 `context_file`(`docs/note/context.md`)에 맞춤. `note_dir`는 `setup-dag-stack`의 `docs/note` 링크 규칙을 따르고, 입력 `project_name`을 `project_path`로 바꿈.
   - 예시 Figma 파일 키·노드·프로젝트명을 일반 예시로 교체.
+- `receive-dag-stack` — 개인 노트 볼트에서 이관, DAG 스택 이름 규칙에 맞춰 이름을 바꿈. `run-dag-stack`이 파견한 서브에이전트의 실행 계약(구현 / 통합 구현 / 리뷰 / 리뷰 수정 모드, append-only `implementation.md`, 커밋까지만 하고 푸시·PR은 오케스트레이터 몫).
+  - 오케스트레이터 참조를 `run-dag-stack`으로 바꾸고, 이 저장소에 없는 통합 구현 오케스트레이터 이름은 일반 서술로 대체. 신규 태스크 추가는 `append-dag-stack`/`set-dag-stack` 경유로 명시.
+  - 리뷰 모드 입력을 라운드 모델에 맞춤(태스크 커밋 diff, 라운드 PR이 열려 있으면 PR diff). 위키링크 예시 경로를 일반화하고 Obsidian 볼트가 없으면 평문 id를 쓰도록 명시.
 
 ### Changed
 
-- `plan-dag-stack` — `context.md`를 `context-collector`가 만든다는 점을 3단계에 명시.
-- `track-dag-stack` — 지문 재수집 주체를 `context-collector`로 명시.
-- `run-dag-stack` — 쌓인 라운드의 기본 흐름을 일반 git으로: 라운드 *n+1*을 라운드 *n* 브랜치에서 따고 `gh pr create --base <라운드 n 브랜치>`(draft 금지)로 PR을 엶. 아래 라운드가 바뀌면 위 브랜치에 merge로 전파(force-push 금지 명시), 아래 라운드가 머지되면 `gh pr edit --base`로 다음 PR의 base를 바꿈. `gh-stack`은 설치돼 있을 때의 선택지로만 남기고 기존 안전 규칙(`submit --auto --open`, `view --json`, `unstack` 자동 실행 금지)을 유지.
+- `plan-dag-stack` — `context.md`를 `collect-dag-stack`이 만든다는 점을 3단계에 명시.
+- `track-dag-stack` — 지문 재수집 주체를 `collect-dag-stack`으로 명시.
+- `run-dag-stack` — 서브에이전트 파견 시 `receive-dag-stack`을 따르도록 4단계에 명시. 쌓인 라운드의 기본 흐름을 일반 git으로: 라운드 *n+1*을 라운드 *n* 브랜치에서 따고 `gh pr create --base <라운드 n 브랜치>`(draft 금지)로 PR을 엶. 아래 라운드가 바뀌면 위 브랜치에 merge로 전파(force-push 금지 명시), 아래 라운드가 머지되면 `gh pr edit --base`로 다음 PR의 base를 바꿈. `gh-stack`은 설치돼 있을 때의 선택지로만 남기고 기존 안전 규칙(`submit --auto --open`, `view --json`, `unstack` 자동 실행 금지)을 유지.
 - `setup-dag-stack` — `gh-stack` 등록 단계를 선택 사항으로. force-push 금지는 유지.
 - `append-dag-stack`, `set-dag-stack`, `show-dag-stack` — 금지 문구를 도구 중립적으로(브랜치·스택 변경 전반: `git branch`/`rebase`/`push`, `gh pr`, `gh-stack`).
 - README — `gh-stack`을 의존성에서 선택 도구로 표기.

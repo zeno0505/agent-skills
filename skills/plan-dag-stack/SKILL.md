@@ -38,7 +38,7 @@ reads them and QA and CI have no note vault. This skill neither creates nor read
 1. Verify `project_path` is present. Stop if missing.
 2. Ensure `docs/note/` (the project note directory, linked by `setup-dag-stack/scripts/setup_note_link.sh`) exists.
 3. Read `context.md` and related docs in the project note directory. `context.md` is produced by
-   `context-collector`; if it is missing, run that first rather than collecting requirements here.
+   `collect-dag-stack`; if it is missing, run that first rather than collecting requirements here.
 4. Explore the repository for relevant files, components, routes, data, and tests.
 5. Ask the user for `base_branch` if it is not already stated.
 6. Define tasks with `target_files`. Size them so **one subagent can implement and verify one
