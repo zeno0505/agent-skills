@@ -1,8 +1,10 @@
-/* video-making base style — 1920×1080. Fonts are declared with local() so lint passes and no web font is fetched. */
-@font-face { font-family: "NotoKR"; font-weight: 400; src: local("Noto Sans CJK KR"); }
-@font-face { font-family: "NotoKR"; font-weight: 700 900; src: local("Noto Sans CJK KR Bold"); }
-@font-face { font-family: "NotoMonoKR"; font-weight: 400; src: local("Noto Sans Mono CJK KR"); }
-@font-face { font-family: "NotoMonoKR"; font-weight: 700; src: local("Noto Sans Mono CJK KR Bold"); }
+/* video-making base style — 1920×1080. Fonts are declared with local() so lint passes and no web font is fetched.
+   First match wins: Noto Sans CJK KR (Linux, or installed on macOS), then macOS's built-in Apple SD Gothic Neo.
+   Mono falls back to Menlo (no Hangul in Menlo — Korean glyphs then come from the system font). */
+@font-face { font-family: "NotoKR"; font-weight: 400; src: local("Noto Sans CJK KR"), local("Apple SD Gothic Neo Regular"), local("AppleSDGothicNeo-Regular"); }
+@font-face { font-family: "NotoKR"; font-weight: 700 900; src: local("Noto Sans CJK KR Bold"), local("Apple SD Gothic Neo Bold"), local("AppleSDGothicNeo-Bold"); }
+@font-face { font-family: "NotoMonoKR"; font-weight: 400; src: local("Noto Sans Mono CJK KR"), local("Menlo-Regular"); }
+@font-face { font-family: "NotoMonoKR"; font-weight: 700; src: local("Noto Sans Mono CJK KR Bold"), local("Menlo-Bold"); }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0d1117; }
 #root { position: relative; width: 1920px; height: 1080px; font-family: "NotoKR", sans-serif; color: #e6edf3; word-break: keep-all; }

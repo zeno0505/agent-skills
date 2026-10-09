@@ -4,6 +4,27 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-10
+
+macOS에서 외부 에이전트(Claude Code 헤드리스)로 `video-making`을 처음부터 끝까지 돌려 본 결과와 반복 영상·PDF 운영 피드백을 반영했습니다(`video-making` 0.1.2, `pdf-report` 0.1.1).
+
+### Added
+
+- `video-making` — 반복 영상(같은 형식을 매주) 절(§11): 장면 템플릿 + 데이터 파일 + 슬롯, 바뀐 장면만 다시 렌더·검수하는 패턴과 비용(분할 렌더는 처음 한 번이 단일 렌더보다 몇 배 느림). 엔진 코드는 넣지 않음.
+- `video-making` — 초안 전용 실행 규칙: 초안 배지·`-draft` 파일명을 지키면 스토리보드 승인 대신 초안 영상 + `claims-sources.md`를 작성자가 승인, 승인 전엔 공식 채널로 보내지 않음.
+- `video-making` — `build_timeline.py`가 장면 길이를 넘기는 트윈(반복 포함)을 경고, 스토리보드 `no_read_classes`로 읽기 시간에서 뺄 클래스를 추가.
+- `video-making` — `preflight.sh`가 `VIDEO_NODE_BIN` 환경 변수로 Node 위치를 받음. 결과를 `ready`(0) / `needs one-time fetch`(3) / `missing`(1)로 나눠, CLI·Chrome이 아직 없는데 `ready`라고 하던 문제를 고침.
+- `pdf-report` — `qa_pages.py`가 페이지 전체 잉크 비율(`ink%`)을 재고 거의 빈 페이지를 `BLANK`로 표시, `--fail-blank`면 종료 코드 1. `build.sh`가 이 옵션으로 호출.
+- `pdf-report` — 같은 보고서를 다시 만들 때 고정 폴더(`$PDF_DECK_ROOT/<보고서-이름>/`)를 재사용하는 규칙.
+
+### Changed
+
+- `video-making` — 문서의 설치 경로를 `$SKILL_DIR`로 바꿈(스킬을 `~/.claude/skills` 등 다른 곳에 둔 에이전트가 경로를 못 찾던 문제).
+- `video-making` — macOS 대응: GNU `timeout`이 없으면 `gtimeout`이나 perl로 대신(없으면 CLI 점검이 조용히 「not in cache」로 빠지던 문제), Noto Sans CJK KR이 없으면 Apple SD Gothic Neo로 대체(템플릿 CSS `local()` 목록과 사전 점검), `shasum -a 256`, OS별 캡처 방식 차이를 문서화.
+- `video-making` — 샌드박스 에이전트(Codex `workspace-write`)에서는 npm 캐시·로컬 서버·프로세스 우선순위가 막혀 `check`·`render`가 돌지 않음을 문서화. `vendor_gsap.sh --fetch`가 npm 오류를 숨기지 않고 대안을 안내. `extract_frames.py`가 영상이 없으면 짧은 오류로 끝남.
+- `video-making` — 새 고정 요소에는 `data-no-read`가 필수임을 강조, 템플릿·분할 영상은 전체 진행 막대 대신 장면 표시를 쓰도록 안내, QA 프레임은 컷 0.3초 전이라 반복 애니메이션은 깔끔한 자세로 끝나게, 결과 파일명(`<slug>.mp4` / `<slug>-draft.mp4`)과 스토리보드 표 위치(`storyboard.md`)를 명시.
+- README — `video-making` 0.1.2(Linux·macOS), `pdf-report` 0.1.1.
+
 ## [0.3.1] - 2026-10-10
 
 `video-making` 첫 실사용 피드백을 반영했습니다(스킬 0.1.1).

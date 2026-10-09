@@ -25,4 +25,5 @@ echo "==> pdfinfo"
 pdfinfo "$PDF" | grep -E '^(Pages|Page size):' || true
 
 echo "==> page QA numbers (suspects only — open the PNGs to judge)"
-python3 "$HERE/qa_pages.py" "$OUT/png" --sheets "$OUT/qa"
+# --fail-blank: an empty / nearly empty page fails the run here, before anyone reviews the PNGs
+python3 "$HERE/qa_pages.py" "$OUT/png" --sheets "$OUT/qa" --fail-blank
