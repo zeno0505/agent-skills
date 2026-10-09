@@ -40,8 +40,10 @@ git config remote.pushDefault origin
    - Else if the round has a `pr_url`, `gh pr checkout <number>`.
    - Else the round was never pushed: `git checkout -b <branch> <base>` — where `<base>` is the
      round's recorded `base`, which must itself resolve first. If it does not, stop and report.
-5. If the rounds are stacked (round *n+1*'s `base` is round *n*'s branch), register the chain
-   with `gh-stack` so `rebase --upstack` / `sync` work. Never run `gh stack unstack` automatically.
+5. Stacked rounds (round *n+1*'s `base` is round *n*'s branch) need nothing extra: the chain is
+   just the recorded `base` of each round, and step 6 checks it. *Optional:* if the `gh stack`
+   extension is installed and the project uses it, register the chain with it so
+   `rebase --upstack` / `sync` work. Never run `gh stack unstack` automatically.
 6. Verify: each target round's branch exists and its recorded `base` is its actual merge base.
    On mismatch, stop and report drift — do not auto-correct.
 7. Call `track-dag-stack` to reconcile `dag.yaml` against what is now local.
@@ -51,8 +53,8 @@ git config remote.pushDefault origin
 
 ## Guardrails
 
-- Never run `gh stack view` without `--json`.
-- Never run `gh stack unstack`, and never force-push during reconstruction.
+- Never force-push during reconstruction.
+- If `gh-stack` is used: never run `gh stack view` without `--json`, never run `gh stack unstack`.
 - Never `git push` from this skill — a stale local branch would clobber remote work.
 - Stop and report on any drift instead of rebuilding.
 

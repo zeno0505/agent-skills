@@ -89,7 +89,7 @@ set.py --add-task --phase feature --value-file new-task.yaml --yaml
 ## Constraints
 
 - Change only what you were asked to change. One field per call.
-- Do not touch code, do not run `gh stack` mutations.
+- Do not touch code, do not run branch or stack mutations (`git branch`/`rebase`/`push`, `gh pr`, `gh-stack`).
 - `track-dag-stack` stays the owner of `status`/`pr_url`/`deviations` decisions — this skill is
   the instrument it writes with, not a licence for other skills to write.
 

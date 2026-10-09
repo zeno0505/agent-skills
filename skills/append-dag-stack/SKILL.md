@@ -40,7 +40,7 @@ because: string        # REQUIRED. Why this task exists now (see *Every task car
    writing. A fix task that changes a screen needs coverage as much as the task it fixes.
 7. If `because` is a requirement change, record it in the context document in the same action
    (see *Every task carries its reason*).
-8. Do **not** run `gh stack add`, do not create a branch, do not open a PR.
+8. Do **not** create a branch (`git checkout -b`, or `gh stack add` if `gh-stack` is in use), and do not open a PR.
 
 ## Default task shape
 

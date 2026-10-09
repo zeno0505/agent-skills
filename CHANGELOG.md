@@ -6,7 +6,7 @@
 
 ## [0.2.0] - 2026-10-10
 
-0.1.0 이관 때 빠진 DAG 스택 짝 스킬 `context-collector`를 추가했습니다.
+0.1.0 이관 때 빠진 DAG 스택 짝 스킬 `context-collector`를 추가하고, DAG 스택에서 `gh-stack`을 필수에서 선택으로 내렸습니다.
 
 ### Added
 
@@ -18,6 +18,10 @@
 
 - `plan-dag-stack` — `context.md`를 `context-collector`가 만든다는 점을 3단계에 명시.
 - `track-dag-stack` — 지문 재수집 주체를 `context-collector`로 명시.
+- `run-dag-stack` — 쌓인 라운드의 기본 흐름을 일반 git으로: 라운드 *n+1*을 라운드 *n* 브랜치에서 따고 `gh pr create --base <라운드 n 브랜치>`(draft 금지)로 PR을 엶. 아래 라운드가 바뀌면 위 브랜치에 merge로 전파(force-push 금지 명시), 아래 라운드가 머지되면 `gh pr edit --base`로 다음 PR의 base를 바꿈. `gh-stack`은 설치돼 있을 때의 선택지로만 남기고 기존 안전 규칙(`submit --auto --open`, `view --json`, `unstack` 자동 실행 금지)을 유지.
+- `setup-dag-stack` — `gh-stack` 등록 단계를 선택 사항으로. force-push 금지는 유지.
+- `append-dag-stack`, `set-dag-stack`, `show-dag-stack` — 금지 문구를 도구 중립적으로(브랜치·스택 변경 전반: `git branch`/`rebase`/`push`, `gh pr`, `gh-stack`).
+- README — `gh-stack`을 의존성에서 선택 도구로 표기.
 
 ## [0.1.0] - 2026-10-08
 

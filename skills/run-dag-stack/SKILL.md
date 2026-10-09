@@ -75,14 +75,44 @@ git diff <base>...HEAD --shortstat
 ## Stacked rounds
 
 When round *n* is open or approved but not merged and there is more work to do, do not wait.
-Stack round *n+1* on top of it with `base: <round n branch>` and let `gh-stack` manage the
-chain. The stack node is a round, so the stack stays 2–4 branches deep — never one per task.
+Stack round *n+1* on top of it with plain git — no extra tool is required. The stack node is a
+round, so the stack stays 2–4 branches deep — never one per task.
 
-When a lower round changes (review fixes), propagate: `gh stack rebase --upstack`.
+```bash
+git checkout -b <round n+1 branch> <round n branch>      # step 3, with base = round n's branch
+# … commit tasks …
+git push -u origin <round n+1 branch>
+gh pr create --base <round n branch> --head <round n+1 branch> --fill   # never --draft
+```
 
-If you submit the chain through `gh-stack`, it **must** be `gh stack submit --auto --open`.
-A bare `--auto` creates drafts, and CodeRabbit does not review drafts — the round would sit in
-`in_review` forever with no bot ever looking at it.
+**When a lower round changes** (review fixes on round *n*), propagate upward with plain git,
+bottom to top:
+
+```bash
+git checkout <round n+1 branch>
+git merge <round n branch>        # then run verification and a normal `git push`
+```
+
+Merge, not rebase, once the upper branch has been pushed: rebasing a pushed branch needs a
+force-push, and this skill does not force-push. Rebasing is fine only while the upper branch is
+still local.
+
+**When a lower round merges**, retarget the next PR before anything else, so its diff stops
+including the merged round:
+
+```bash
+gh pr edit <round n+1 PR> --base <base_branch>
+```
+
+Record the new base with `set.py --round <n+1> --set base`, then merge `<base_branch>` into the
+round *n+1* branch if it no longer applies cleanly.
+
+**Optional: `gh-stack`.** If the `gh stack` extension is installed you may let it manage the chain
+instead (`gh stack rebase --upstack` to propagate). Submitting through it **must** be
+`gh stack submit --auto --open` — a bare `--auto` creates drafts, and CodeRabbit does not review
+drafts, so the round would sit in `in_review` forever with no bot ever looking at it. Never run
+`gh stack view` without `--json` (it opens a TUI), and never run `gh stack unstack`
+automatically.
 
 ## Statuses this skill writes
 
@@ -111,11 +141,12 @@ Everything else — commits, pushes, opening the PR, status writes, checklist li
 
 ## Guardrails
 
-- Never create a draft PR. CodeRabbit does not review drafts. With `gh-stack` that means
-  `gh stack submit --auto --open`, never bare `--auto`.
+- Never create a draft PR. CodeRabbit does not review drafts. No `--draft` on `gh pr create`;
+  with the optional `gh-stack`, `gh stack submit --auto --open`, never bare `--auto`.
+- Never force-push. Propagate lower-round changes by merging them into the upper branch.
 - Never push without running `verification` first.
 - Never close a round without approval, even when the budget is exceeded.
 - Never write `dag.yaml` with the Edit tool; use `set-dag-stack`.
 - Never append a checklist line without its task id tag.
 - Never block a round on E2E coverage. Report it on the approval you already stop for.
-- Never run `gh stack view` without `--json`, and never run `gh stack unstack` automatically.
+- If `gh-stack` is used: never run `gh stack view` without `--json`, and never run `gh stack unstack` automatically.
