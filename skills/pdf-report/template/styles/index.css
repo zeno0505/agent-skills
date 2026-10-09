@@ -1,4 +1,4 @@
-/* slidev-pdf template styles — fixed 16:9, readable Korean type, HTML/CSS diagrams. */
+/* pdf-report template styles — fixed 16:9, readable Korean type, HTML/CSS diagrams. */
 :root { --accent: #0369a1; --ink: #0f172a; --muted: #64748b; --line: #cbd5e1; --soft: #f8fafc; }
 .slidev-layout {
   font-family: 'Noto Sans CJK KR', 'Noto Sans KR', sans-serif !important;

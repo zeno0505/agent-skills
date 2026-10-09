@@ -5,7 +5,7 @@ description: >-
 ---
 # 주간 교훈 블로그 발행
 
-작성자가 **승인한** 주간 교훈 초안만 GitHub Pages 블로그 저장소에 올린다. 초안·말투·교훈 타당성 심사는 `weekly-lesson-draft` 스킬이, 그림은 `weekly-lesson-images` 스킬이 담당한다.
+작성자가 **승인한** 주간 교훈 초안만 GitHub Pages 블로그 저장소에 올린다. 초안·말투·교훈 타당성 심사는 `weekly-lesson-draft` 스킬이, 그림은 `image-making` 스킬(용도 `blog`)이 담당한다.
 
 ## Preconditions (하나라도 없으면 여기서 멈춘다)
 1. 초안 스킬의 **작성자 1:1 리뷰 게이트**를 통과했다(승인 문구가 있음). 이미지가 있으면 채택된 장만.
