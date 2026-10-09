@@ -115,7 +115,7 @@ Recompute a Notion fingerprint over the blocks that were actually quoted, not th
 that is how the fingerprint was made, and hashing the whole page reports a change every time
 someone fixes a typo.
 
-This skill does not update the fingerprints. Re-collecting belongs to your requirement-collection step (e.g. a `context-collector` skill) and
+This skill does not update the fingerprints. Re-collecting is `context-collector`'s job and
 recording why a change was accepted belongs in the context document's change log, written by
 `append-dag-stack` along with whatever task the change produced.
 

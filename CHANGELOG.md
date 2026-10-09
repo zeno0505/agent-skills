@@ -4,6 +4,21 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-10
+
+0.1.0 이관 때 빠진 DAG 스택 짝 스킬 `context-collector`를 추가했습니다.
+
+### Added
+
+- `context-collector` — 개인 노트 볼트에서 이관. 계획 전 요구사항 수집(Notion·Jira·Figma·Slack → `context.md`, 원문별 출처·지문, 변경 이력은 덮어쓰지 않고 쌓기).
+  - 핸드오프 대상을 `plan-dag-stack`으로 바꾸고, 출력 경로를 `plan-dag-stack`의 `context_file`(`docs/note/context.md`)에 맞춤. `note_dir`는 `setup-dag-stack`의 `docs/note` 링크 규칙을 따르고, 입력 `project_name`을 `project_path`로 바꿈.
+  - 예시 Figma 파일 키·노드·프로젝트명을 일반 예시로 교체.
+
+### Changed
+
+- `plan-dag-stack` — `context.md`를 `context-collector`가 만든다는 점을 3단계에 명시.
+- `track-dag-stack` — 지문 재수집 주체를 `context-collector`로 명시.
+
 ## [0.1.0] - 2026-10-08
 
 첫 공개 릴리스. 개인 작업 환경에서 쓰던 스킬을 옮기면서 조직·사람·제품 이름, 내부 ID, 개인 경로를 일반화했습니다.

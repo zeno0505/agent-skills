@@ -15,7 +15,7 @@ for d in ~/src/agent-skills/skills/*/; do ln -sfn "$d" ~/.agents/skills/"$(basen
 ln -sfn ~/.agents/skills ~/.claude/skills   # Claude Code — 기존 디렉터리가 있으면 개별 링크로
 ```
 
-필요한 스킬만 골라 링크해도 됩니다. 단, DAG 스택 스킬은 서로의 스크립트를 부르므로 **11개를 함께** 설치하세요.
+필요한 스킬만 골라 링크해도 됩니다. 단, DAG 스택 스킬은 서로의 스크립트를 부르므로 **11개를 함께** 설치하세요. 계획 전 요구사항을 모으는 짝 스킬 `context-collector`도 같이 두는 것을 권합니다.
 
 ## 스킬 목록
 
@@ -34,11 +34,12 @@ ln -sfn ~/.agents/skills ~/.claude/skills   # Claude Code — 기존 디렉터�
 | [`x-post-analysis`](skills/x-post-analysis) | X 게시글 원문·맥락을 먼저 확보하고 작성자 의도를 분리해 정리 | X 읽기 도구 | 0.1.0 |
 | [`image-making`](skills/image-making) | 글·리포트·PDF에 들어갈 그림 한 장 제작 + 그림 단위 Self-QA (용도: blog / report-card / pdf-figure별 비율·mermaid·공개 필터) | (선택) `pdf-report` 템플릿, Python + Pillow | 0.1.0 |
 | [`pdf-report`](skills/pdf-report) | Slidev로 사람용 PDF 보고서 작성 — 자가완결(용어·출처 부록) + 페이지별 시각 QA, 그림은 `image-making` 호출 | Node, Slidev 53, playwright-chromium, poppler-utils, Python + Pillow | 0.1.0 |
-| [`plan-dag-stack`](skills/plan-dag-stack) | 프로젝트를 DAG(dag.yaml)로 계획, 라운드 단위 브랜치·PR | DAG 공통¹ | 0.1.0 |
+| [`context-collector`](skills/context-collector) | 계획 전에 Notion·Jira·Figma·Slack 요구사항을 1회 수집해 출처·지문 달린 `context.md`로 정리하고 `plan-dag-stack`에 넘김 | 각 소스 읽기 도구(MCP 등) | 0.2.0 |
+| [`plan-dag-stack`](skills/plan-dag-stack) | 프로젝트를 DAG(dag.yaml)로 계획, 라운드 단위 브랜치·PR | DAG 공통¹ | 0.2.0 |
 | [`run-dag-stack`](skills/run-dag-stack) | pending 태스크를 라운드 브랜치에 커밋하고 PR 올리기 | DAG 공통¹, gh-stack, CodeRabbit | 0.1.0 |
 | [`review-dag-stack`](skills/review-dag-stack) | 라운드 PR의 CodeRabbit 리뷰를 읽고 반영 태스크로 정리 | DAG 공통¹, CodeRabbit | 0.1.0 |
 | [`append-dag-stack`](skills/append-dag-stack) | 후속·QA 수정·리뷰 반영·요구 변경을 기존 DAG에 추가 | DAG 공통¹ | 0.1.0 |
-| [`track-dag-stack`](skills/track-dag-stack) | 구현·푸시·머지 뒤 dag.yaml을 실제 git/PR 상태와 맞춤 | DAG 공통¹ | 0.1.0 |
+| [`track-dag-stack`](skills/track-dag-stack) | 구현·푸시·머지 뒤 dag.yaml을 실제 git/PR 상태와 맞춤 | DAG 공통¹ | 0.2.0 |
 | [`setup-dag-stack`](skills/setup-dag-stack) | 새 워크트리에 라운드 브랜치·노트 링크 복원 | DAG 공통¹, gh-stack, (선택) Conductor | 0.1.0 |
 | [`read-dag-stack`](skills/read-dag-stack) | dag.yaml 읽기 전용 질의 (상태·의존·대상 파일) | Python 3 + PyYAML | 0.1.0 |
 | [`set-dag-stack`](skills/set-dag-stack) | dag.yaml 쓰기 (검증 포함, 직접 편집 금지) | Python 3 + PyYAML | 0.1.0 |
