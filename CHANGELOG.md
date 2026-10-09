@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-10
+
+흐름·변화·PR 설명용 설명 영상 스킬 `video-making`을 추가했습니다.
+
+### Added
+
+- `video-making` — 신규 작성. 흐름·변화·PR 설명용 90초 이하 무음 설명 영상을 HyperFrames로 만드는 절차: 언제 쓰나(`image-making`·`pdf-report`와 구분), 의존성·환경(Node 22, 고정 버전 npx, 사전 점검 후 승인받고 설치, 텔레메트리·스킬 자동 설치 끄기, 로컬 GSAP), 스토리보드 게이트, 화면 규칙(진행 막대, 카드당 4–5줄, 최소 글자 크기, CJK `@font-face local()`, `keep-all`), 글자량 기반 장면 길이, QA 게이트(`check` + 장면별 프레임 + 재렌더 체크섬). `preflight.sh`, `build_timeline.py`, `extract_frames.py`, 기본 스타일·스토리보드 예시 포함.
+- README — 스킬 목록에 `video-making` 행, 외부 도구에 HyperFrames 항목.
+
 ## [0.2.0] - 2026-10-10
 
 0.1.0 이관 때 빠진 DAG 스택 짝 스킬 `collect-dag-stack`과 `receive-dag-stack`을 추가하고, DAG 스택에서 `gh-stack`을 필수에서 선택으로 내렸습니다.

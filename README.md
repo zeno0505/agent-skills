@@ -34,6 +34,7 @@ ln -sfn ~/.agents/skills ~/.claude/skills   # Claude Code — 기존 디렉터�
 | [`x-post-analysis`](skills/x-post-analysis) | X 게시글 원문·맥락을 먼저 확보하고 작성자 의도를 분리해 정리 | X 읽기 도구 | 0.1.0 |
 | [`image-making`](skills/image-making) | 글·리포트·PDF에 들어갈 그림 한 장 제작 + 그림 단위 Self-QA (용도: blog / report-card / pdf-figure별 비율·mermaid·공개 필터) | (선택) `pdf-report` 템플릿, Python + Pillow | 0.1.0 |
 | [`pdf-report`](skills/pdf-report) | Slidev로 사람용 PDF 보고서 작성 — 자가완결(용어·출처 부록) + 페이지별 시각 QA, 그림은 `image-making` 호출 | Node, Slidev 53, playwright-chromium, poppler-utils, Python + Pillow | 0.1.0 |
+| [`video-making`](skills/video-making) | 흐름·변화·PR 설명을 90초 이하 무음 설명 영상(MP4)으로 — HyperFrames(HTML→MP4), 스토리보드 승인 게이트, 글자량 기반 장면 길이, 장면별 프레임 검수·재렌더 체크섬 확인, 그림은 `image-making` 호출 | Node 22+, `npx hyperframes@0.8.143`, FFmpeg, (자동 다운로드) chrome-headless-shell, Python 3 | 0.1.0 |
 | [`collect-dag-stack`](skills/collect-dag-stack) | 계획 전에 Notion·Jira·Figma·Slack 요구사항을 1회 수집해 출처·지문 달린 `context.md`로 정리하고 `plan-dag-stack`에 넘김 | 각 소스 읽기 도구(MCP 등) | 0.2.0 |
 | [`plan-dag-stack`](skills/plan-dag-stack) | 프로젝트를 DAG(dag.yaml)로 계획, 라운드 단위 브랜치·PR | DAG 공통¹ | 0.2.0 |
 | [`run-dag-stack`](skills/run-dag-stack) | pending 태스크를 라운드 브랜치에 커밋하고 PR 올리기 | DAG 공통¹, CodeRabbit, (선택) gh-stack | 0.2.0 |
@@ -69,6 +70,7 @@ export NOTE_ROOT=~/notes/projects            # 노트 루트 (필수)
 - **gh-stack (선택)** — 라운드 브랜치를 쌓는 `gh stack` 확장. 필수가 아닙니다: 기본 흐름은 일반 git 브랜치를 라운드마다 쌓고 `gh pr create --base <아래 라운드 브랜치>`로 PR을 여는 방식입니다. 확장을 쓰려면 설치는 해당 확장의 안내를 따르세요.
 - **Conductor / Orca** — 워크트리별 에이전트 작업 공간. DAG 스킬은 워크트리 이름 규칙을 예시로만 언급하며 필수는 아닙니다. `cross-agent-review`는 Orca의 `orca terminal list|read|send`를 쓰고, 없으면 요청문을 다른 세션에 직접 붙여 넣는 방식으로 대체합니다.
 - **Slidev / Playwright / poppler** — `pdf-report`, `image-making`, `mockup-screenshot-diff`가 사용합니다. 버전은 각 스킬 문서를 보세요.
+- **HyperFrames** — `video-making`이 사용합니다. 전역 설치 없이 `npx hyperframes@<고정 버전>`으로 부르고, 첫 렌더 때 chrome-headless-shell을 `~/.cache/hyperframes`에 내려받습니다.
 
 ## 공개 저장소 점검
 
