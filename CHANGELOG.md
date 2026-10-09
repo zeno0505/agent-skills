@@ -4,6 +4,25 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-10
+
+`video-making` 첫 실사용 피드백을 반영했습니다(스킬 0.1.1).
+
+### Added
+
+- `video-making` — 템플릿에 `hyperframes.json`·`package.json`을 넣어 `init` 없이 프로젝트를 만듦. `scripts/vendor_gsap.sh` 추가: `gsap@3.14.2`를 npm 캐시에서 꺼내 sha256·라이선스 주석을 확인해 프로젝트에 복사(캐시에 없으면 승인 후 `--fetch` 1회). GSAP 라이선스가 공개 저장소 재배포를 분명히 허락하지 않아 사본은 커밋하지 않음.
+- `video-making` — 스토리보드 최상위 `overlay`(초안 배지처럼 모든 장면에 보이는 요소, 시간 속성 없는 위층으로 렌더), 장면 `class` 필드와 `.scene.center`(아래 절반이 비는 짧은 장면용 세로 가운데 정렬), `.draft` 배지 스타일.
+- `video-making` — 근거 표기 형식(저장소 경로:줄, 커밋·PR, Slack 퍼머링크, Notion URL, 웹 URL, 직접 측정)과 `claims-sources.md` 전달.
+
+### Changed
+
+- `video-making` — 1회 받기(CLI·Chrome `browser ensure`·GSAP, 승인 후) 뒤로는 모든 명령을 `npx --no-install --offline hyperframes@0.8.143`로 바꿔 검사·렌더에 네트워크를 쓰지 않음. `--no-install`만으로는 npx가 버전 확인차 레지스트리에 접속하고, 네트워크가 없으면 멈춤.
+- `video-making` — `build_timeline.py`가 `.source`·`.draft`·`data-no-read` 요소와 overlay를 읽기 시간 글자량에서 뺌.
+- `video-making` — `extract_frames.py`가 태그 붙은 파일과 함께 고정 이름 `frame-N.png`도 씀(`--no-stable`로 끔).
+- `video-making` — `preflight.sh --node`가 Node 폴더와 그 `bin` 폴더를 모두 받음. `doctor`가 선택 항목(Docker 데몬 등)만 실패해 「Some checks failed」를 내면 note로 따로 적고 `result: ready` 유지.
+- `video-making` — QA 게이트에 늘 나오는 무시 가능 경고(`nested_structure_needs_subcomposition`, `timeline_track_too_dense`)를 명시. HyperFrames 0.8.143에는 특정 lint 규칙을 끄는 공식 방법이 없음.
+- README — `video-making` 행을 0.1.1로, 외부 도구 HyperFrames 항목에 `--no-install --offline`·GSAP 처리 반영.
+
 ## [0.3.0] - 2026-10-10
 
 흐름·변화·PR 설명용 설명 영상 스킬 `video-making`을 추가했습니다.

@@ -7,10 +7,11 @@
   "hold": 4.5,
   "cps": 15,
   "progress_bar": true,
+  "overlay": "<div class='draft'>예시 · 초안</div>",
   "scenes": [
     {
       "id": "s1",
-      "style": "display:flex;flex-direction:column;justify-content:center;padding:0 140px;",
+      "class": "center",
       "body": "<div class='kicker mono' id='s1k'>example/repo · main</div><h1 id='s1h'>요청은 어떻게<br/>배포까지 갈까</h1><div class='sub' id='s1s'>세 단계를 1분 안에</div>",
       "reveals": [["#s1k", 0.3], ["#s1h", 0.4], ["#s1s", 0.8]]
     },
@@ -21,6 +22,7 @@
     },
     {
       "id": "s3",
+      "class": "center",
       "body": "<h2>사람이 <span class='tag'>정하는 곳</span></h2><div class='lead'>나머지는 자동</div><div class='row'><div class='card' id='c1' style='flex:1;'><h3>계획 승인</h3><ul><li>작업 범위 확인</li><li>기준 브랜치 선택</li></ul></div><div class='card' id='c2' style='flex:1;'><h3>병합</h3><ul><li>리뷰 통과 후</li><li><span class='no'>자동 병합 금지</span></li></ul></div></div><div class='source mono'>출처: example/repo · docs/flow.md:52–60</div>",
       "reveals": [["#c1", 0.3], ["#c2", 1.2]]
     }
