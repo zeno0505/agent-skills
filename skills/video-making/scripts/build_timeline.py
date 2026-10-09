@@ -8,36 +8,78 @@ Each scene's duration is computed, never hand-tuned:
   duration = max(last_reveal + reveal + hold,  read_base + weighted_chars / cps)
   weighted_chars = Hangul/CJK chars * 1.0 + other non-space chars * 0.5   (tags stripped)
 Defaults: reveal 0.5s, hold 4.5s, read_base 1.5s, cps 15. Per-scene "hold" / "cps" override.
+Not counted as reading text: elements with class "source" or "draft", elements carrying a
+data-no-read attribute (and everything inside them), <script>/<style>, and the overlay.
 
 storyboard.json (paths relative to the JSON file):
 {
   "width": 1920, "height": 1080, "css": "style.css", "gsap": "gsap.min.js", "lang": "ko",
   "hold": 4.5, "cps": 15, "read_base": 1.5, "reveal": 0.5, "progress_bar": true,
+  "overlay": "<div class='draft'>초안</div>",        # optional: shown on every scene, never animated
   "scenes": [
-    {"id": "s1", "style": "", "body": "<h1 id='s1h'>…</h1>"  (or "body_file": "scenes/s1.html"),
+    {"id": "s1", "class": "center", "style": "", "body": "<h1 id='s1h'>…</h1>"  (or "body_file": "scenes/s1.html"),
      "reveals": [["#s1h", 0.3], ["#s1s", 0.8]],      # [selector, seconds after previous reveal start]
      "tweens": [["tl.to('#ph', {x: 900, duration: 2, ease: 'none'}, {t});", 1.0]],  # {t} = absolute time
      "hold": 6, "cps": 12}
   ]
 }
+"overlay" may be a string or a list of strings (HTML). It is placed once, outside the scene
+clips, as an untimed layer above them, so it stays visible for the whole video.
 Writes index.html (one paused GSAP timeline registered as window.__timelines["main"]) and
 timing.json ([{id, start, duration, full_reveal, qa_time, rule, chars}]) for extract_frames.py.
 Prints a timing table; scenes longer than 20s are flagged for splitting.
 """
 import argparse
-import html
 import json
 import re
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 
 CJK = re.compile(r"[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3\u3040-\u30ff\u4e00-\u9fff]")
+NO_READ_CLASSES = {"source", "draft"}
+VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+
+
+class ReadableText(HTMLParser):
+    """Collect visible text, skipping script/style and no-read subtrees."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.stack = []  # (tag, skip) per open element; skip is True inside a no-read subtree
+        self.parts = []
+
+    def _skipping(self):
+        return bool(self.stack) and self.stack[-1][1]
+
+    def handle_starttag(self, tag, attrs):
+        if tag in VOID:
+            return
+        a = dict(attrs)
+        classes = set((a.get("class") or "").split())
+        skip = (self._skipping() or tag in ("script", "style")
+                or bool(classes & NO_READ_CLASSES) or "data-no-read" in a)
+        self.stack.append((tag, skip))
+
+    def handle_startendtag(self, tag, attrs):
+        pass
+
+    def handle_endtag(self, tag):
+        if tag in VOID or all(t != tag for t, _ in self.stack):
+            return  # stray end tag
+        while self.stack and self.stack.pop()[0] != tag:
+            pass  # implicitly close unclosed children (e.g. <li> without </li>)
+
+    def handle_data(self, data):
+        if not self._skipping():
+            self.parts.append(data)
 
 
 def visible_text(body: str) -> str:
-    body = re.sub(r"<(script|style)\b.*?</\1>", " ", body, flags=re.S | re.I)
-    body = re.sub(r"<[^>]+>", " ", body)
-    return html.unescape(body)
+    p = ReadableText()
+    p.feed(body)
+    p.close()
+    return " ".join(p.parts)
 
 
 def weighted_chars(text: str) -> float:
@@ -83,8 +125,9 @@ def main():
         by_read = read_base + chars / float(sc.get("cps", g_cps))
         dur = round(max(by_hold, by_read) * 10 + 0.4999) / 10  # round up to 0.1s
         rule = "hold" if by_hold >= by_read else "read"
+        cls = " ".join(["clip", "scene", *str(sc.get("class", "")).split()])
         sections.append(
-            f'<section id="{sid}" class="clip scene" style="{sc.get("style", "")}" '
+            f'<section id="{sid}" class="{cls}" style="{sc.get("style", "")}" '
             f'data-start="{round(t, 3)}" data-duration="{dur}" data-track-index="0">{body}</section>'
         )
         timing.append({"id": sid, "start": round(t, 3), "duration": dur,
@@ -102,6 +145,11 @@ def main():
         progress = (f'<div id="progress" class="clip" style="inset:auto; top:0; left:0; width:{W}px; height:10px;" '
                     f'data-start="0" data-duration="{total}" data-track-index="9"></div>')
         progress_js = f'tl.fromTo("#progress", {{ scaleX: 0 }}, {{ scaleX: 1, duration: {total}, ease: "none" }}, 0);'
+    ov = sb.get("overlay") or ""
+    if isinstance(ov, list):
+        ov = "".join(ov)
+    # Untimed (no data-start) so it is not a timeline clip: always visible, above the scenes.
+    overlay = f'<div id="overlay" class="overlay">{ov}</div>' if ov else ""
     doc = f"""<!doctype html>
 <html lang="{sb.get('lang', 'ko')}" data-resolution="landscape">
 <head>
@@ -116,6 +164,7 @@ def main():
 <div id="root" data-composition-id="main" data-start="0" data-duration="{total}" data-width="{W}" data-height="{H}">
 {progress}
 {chr(10).join(sections)}
+{overlay}
 </div>
 <script>
 window.__timelines = window.__timelines || {{}};

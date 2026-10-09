@@ -8,6 +8,9 @@ html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0d111
 #root { position: relative; width: 1920px; height: 1080px; font-family: "NotoKR", sans-serif; color: #e6edf3; word-break: keep-all; }
 .clip { position: absolute; inset: 0; }
 .scene { padding: 150px 110px 80px; }
+/* .scene.center — vertically centered content for short scenes (title, one statement, one row of
+   cards) that would otherwise leave the lower half empty. Bottom padding keeps clear of .source. */
+.scene.center { display: flex; flex-direction: column; justify-content: center; padding: 110px 110px 140px; }
 #progress { background: #58a6ff; transform-origin: left center; }
 .mono, code, pre { font-family: "NotoMonoKR", monospace; }
 
@@ -21,6 +24,11 @@ h2 { font-size: 72px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 
 .no { color: #ff7b72; font-weight: 700; }
 .ok { color: #7ee787; font-weight: 700; }
 .source { position: absolute; left: 110px; right: 110px; bottom: 40px; font-size: 28px; color: #8b949e; }
+
+/* overlay: storyboard "overlay" HTML, shown on every scene (not counted as reading text) */
+.overlay { position: absolute; inset: 0; z-index: 100; pointer-events: none; }
+.draft { position: absolute; top: 36px; right: 48px; font-size: 28px; font-weight: 700; color: #d29922;
+         border: 3px solid #d29922; border-radius: 14px; padding: 6px 20px; background: #0d1117e6; }
 
 /* cards: ≤4–5 lines each */
 .row { display: flex; gap: 40px; align-items: stretch; }

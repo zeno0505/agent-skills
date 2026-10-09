@@ -1,0 +1,9 @@
+{
+  "name": "video-project",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "HYPERFRAMES_NO_TELEMETRY=1 npx --no-install --offline hyperframes@0.8.143 check",
+    "render": "HYPERFRAMES_NO_TELEMETRY=1 npx --no-install --offline hyperframes@0.8.143 render --quality high --fps 30 --output out/video.mp4"
+  }
+}
