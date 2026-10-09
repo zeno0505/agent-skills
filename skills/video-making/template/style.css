@@ -1,0 +1,39 @@
+/* video-making base style — 1920×1080. Fonts are declared with local() so lint passes and no web font is fetched. */
+@font-face { font-family: "NotoKR"; font-weight: 400; src: local("Noto Sans CJK KR"); }
+@font-face { font-family: "NotoKR"; font-weight: 700 900; src: local("Noto Sans CJK KR Bold"); }
+@font-face { font-family: "NotoMonoKR"; font-weight: 400; src: local("Noto Sans Mono CJK KR"); }
+@font-face { font-family: "NotoMonoKR"; font-weight: 700; src: local("Noto Sans Mono CJK KR Bold"); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0d1117; }
+#root { position: relative; width: 1920px; height: 1080px; font-family: "NotoKR", sans-serif; color: #e6edf3; word-break: keep-all; }
+.clip { position: absolute; inset: 0; }
+.scene { padding: 150px 110px 80px; }
+#progress { background: #58a6ff; transform-origin: left center; }
+.mono, code, pre { font-family: "NotoMonoKR", monospace; }
+
+/* type scale: body ≥34px, labels/sources ≥28px */
+h1 { font-size: 100px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
+h2 { font-size: 72px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 14px; }
+.kicker { font-size: 36px; color: #58a6ff; margin-bottom: 24px; }
+.lead { font-size: 40px; color: #9da7b3; margin-bottom: 48px; }
+.sub { font-size: 38px; color: #9da7b3; margin-top: 36px; }
+.tag { color: #58a6ff; }
+.no { color: #ff7b72; font-weight: 700; }
+.ok { color: #7ee787; font-weight: 700; }
+.source { position: absolute; left: 110px; right: 110px; bottom: 40px; font-size: 28px; color: #8b949e; }
+
+/* cards: ≤4–5 lines each */
+.row { display: flex; gap: 40px; align-items: stretch; }
+.card { background: #161b22; border: 3px solid #30363d; border-radius: 22px; padding: 28px 34px; }
+.card h3 { font-size: 40px; font-weight: 700; margin-bottom: 12px; }
+.card p, .card li { font-size: 35px; line-height: 1.45; color: #c9d1d9; }
+.card ul { list-style: none; }
+.card li::before { content: "• "; color: #58a6ff; }
+
+/* flow: boxes + arrows, short labels so nothing wraps mid-word */
+.pipe { display: flex; align-items: center; gap: 18px; }
+.pbox { background: #161b22; border: 3px solid #30363d; border-radius: 20px; padding: 26px 22px; flex: 1; min-height: 200px; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+.pbox b { display: block; font-size: 38px; }
+.pbox span { display: block; font-size: 30px; color: #9da7b3; margin-top: 10px; line-height: 1.35; }
+.pbox.hl { border-color: #58a6ff; background: #58a6ff14; }
+.pa { font-size: 44px; color: #58a6ff; }

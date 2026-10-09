@@ -1,0 +1,28 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "css": "style.css",
+  "gsap": "gsap.min.js",
+  "lang": "ko",
+  "hold": 4.5,
+  "cps": 15,
+  "progress_bar": true,
+  "scenes": [
+    {
+      "id": "s1",
+      "style": "display:flex;flex-direction:column;justify-content:center;padding:0 140px;",
+      "body": "<div class='kicker mono' id='s1k'>example/repo · main</div><h1 id='s1h'>요청은 어떻게<br/>배포까지 갈까</h1><div class='sub' id='s1s'>세 단계를 1분 안에</div>",
+      "reveals": [["#s1k", 0.3], ["#s1h", 0.4], ["#s1s", 0.8]]
+    },
+    {
+      "id": "s2",
+      "body": "<h2>전체 <span class='tag'>흐름</span></h2><div class='lead'>앞 단계의 산출물이 다음 단계의 입력</div><div class='pipe'><div class='pbox' id='b1'><b>수집</b><span>요구사항 문서</span></div><div class='pa' id='a1'>→</div><div class='pbox' id='b2'><b>계획</b><span>작업 목록</span></div><div class='pa' id='a2'>→</div><div class='pbox hl' id='b3'><b>실행</b><span>리뷰 요청</span></div></div><div class='source mono'>출처: example/repo · docs/flow.md:12–40</div>",
+      "reveals": [["#b1", 0.3], ["#a1", 0.5], ["#b2", 0.3], ["#a2", 0.5], ["#b3", 0.3]]
+    },
+    {
+      "id": "s3",
+      "body": "<h2>사람이 <span class='tag'>정하는 곳</span></h2><div class='lead'>나머지는 자동</div><div class='row'><div class='card' id='c1' style='flex:1;'><h3>계획 승인</h3><ul><li>작업 범위 확인</li><li>기준 브랜치 선택</li></ul></div><div class='card' id='c2' style='flex:1;'><h3>병합</h3><ul><li>리뷰 통과 후</li><li><span class='no'>자동 병합 금지</span></li></ul></div></div><div class='source mono'>출처: example/repo · docs/flow.md:52–60</div>",
+      "reveals": [["#c1", 0.3], ["#c2", 1.2]]
+    }
+  ]
+}
