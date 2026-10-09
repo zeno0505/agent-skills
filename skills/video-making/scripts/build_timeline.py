@@ -8,13 +8,15 @@ Each scene's duration is computed, never hand-tuned:
   duration = max(last_reveal + reveal + hold,  read_base + weighted_chars / cps)
   weighted_chars = Hangul/CJK chars * 1.0 + other non-space chars * 0.5   (tags stripped)
 Defaults: reveal 0.5s, hold 4.5s, read_base 1.5s, cps 15. Per-scene "hold" / "cps" override.
-Not counted as reading text: elements with class "source" or "draft", elements carrying a
-data-no-read attribute (and everything inside them), <script>/<style>, and the overlay.
+Not counted as reading text: elements with class "source" or "draft" (plus any classes listed in
+the storyboard's "no_read_classes"), elements carrying a data-no-read attribute (and everything
+inside them), <script>/<style>, and the overlay.
 
 storyboard.json (paths relative to the JSON file):
 {
   "width": 1920, "height": 1080, "css": "style.css", "gsap": "gsap.min.js", "lang": "ko",
   "hold": 4.5, "cps": 15, "read_base": 1.5, "reveal": 0.5, "progress_bar": true,
+  "no_read_classes": ["footer"],                    # optional: extra classes excluded from reading time
   "overlay": "<div class='draft'>초안</div>",        # optional: shown on every scene, never animated
   "scenes": [
     {"id": "s1", "class": "center", "style": "", "body": "<h1 id='s1h'>…</h1>"  (or "body_file": "scenes/s1.html"),
@@ -27,7 +29,9 @@ storyboard.json (paths relative to the JSON file):
 clips, as an untimed layer above them, so it stays visible for the whole video.
 Writes index.html (one paused GSAP timeline registered as window.__timelines["main"]) and
 timing.json ([{id, start, duration, full_reveal, qa_time, rule, chars}]) for extract_frames.py.
-Prints a timing table; scenes longer than 20s are flagged for splitting.
+Prints a timing table; scenes longer than 20s are flagged for splitting, and tweens whose
+estimated end (offset + duration × (repeat + 1), read from the tween text) passes the scene's cut
+are flagged — the QA frame is taken 0.3s before the cut.
 """
 import argparse
 import json
@@ -44,8 +48,9 @@ VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "met
 class ReadableText(HTMLParser):
     """Collect visible text, skipping script/style and no-read subtrees."""
 
-    def __init__(self):
+    def __init__(self, no_read=NO_READ_CLASSES):
         super().__init__(convert_charrefs=True)
+        self.no_read = set(no_read)
         self.stack = []  # (tag, skip) per open element; skip is True inside a no-read subtree
         self.parts = []
 
@@ -58,7 +63,7 @@ class ReadableText(HTMLParser):
         a = dict(attrs)
         classes = set((a.get("class") or "").split())
         skip = (self._skipping() or tag in ("script", "style")
-                or bool(classes & NO_READ_CLASSES) or "data-no-read" in a)
+                or bool(classes & self.no_read) or "data-no-read" in a)
         self.stack.append((tag, skip))
 
     def handle_startendtag(self, tag, attrs):
@@ -75,8 +80,8 @@ class ReadableText(HTMLParser):
             self.parts.append(data)
 
 
-def visible_text(body: str) -> str:
-    p = ReadableText()
+def visible_text(body: str, no_read=NO_READ_CLASSES) -> str:
+    p = ReadableText(no_read)
     p.feed(body)
     p.close()
     return " ".join(p.parts)
@@ -106,6 +111,8 @@ def main():
     reveal = float(sb.get("reveal", 0.5))
     g_hold, g_cps, read_base = float(sb.get("hold", 4.5)), float(sb.get("cps", 15)), float(sb.get("read_base", 1.5))
 
+    no_read = NO_READ_CLASSES | set(sb.get("no_read_classes", []))
+
     t = 0.0
     js, sections, timing, warn = [], [], [], []
     for sc in sb["scenes"]:
@@ -118,9 +125,15 @@ def main():
             m = re.match(r"#([\w-]+)$", sel)
             if m and f'id="{m.group(1)}"' not in body and f"id='{m.group(1)}'" not in body:
                 warn.append(f"{sid}: reveal selector {sel} not found in scene body")
+        tween_ends = []
         for tpl, off in sc.get("tweens", []):
             js.append(tpl.replace("{t}", str(round(t + float(off), 3))))
-        chars = weighted_chars(visible_text(body))
+            d = re.search(r"duration\s*:\s*([\d.]+)", tpl)
+            r = re.search(r"repeat\s*:\s*(-?\d+)", tpl)
+            if d:
+                reps = int(r.group(1)) if r else 0
+                tween_ends.append((float("inf") if reps < 0 else float(off) + float(d.group(1)) * (reps + 1), tpl))
+        chars = weighted_chars(visible_text(body, no_read))
         by_hold = rel + reveal + float(sc.get("hold", g_hold))
         by_read = read_base + chars / float(sc.get("cps", g_cps))
         dur = round(max(by_hold, by_read) * 10 + 0.4999) / 10  # round up to 0.1s
@@ -135,6 +148,10 @@ def main():
                        "qa_time": round(t + dur - 0.3, 3), "rule": rule, "chars": round(chars, 1)})
         if dur > 20:
             warn.append(f"{sid}: {dur}s — consider splitting the scene")
+        for end, tpl in tween_ends:
+            if end > dur - 0.3:
+                warn.append(f"{sid}: a tween runs to ~{end:g}s but the scene cuts at {dur}s (QA frame at {round(dur - 0.3, 1)}s) — "
+                            f"end it inside the scene in a clean pose: {tpl[:70]}")
         t += dur
     total = round(t, 3)
 

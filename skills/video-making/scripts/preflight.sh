@@ -3,23 +3,28 @@
 #
 # Usage: preflight.sh [--version X.Y.Z] [--node <node-dir>]
 #   --version  pinned HyperFrames CLI version (default 0.8.143)
-#   --node     project-local Node 22 for this check only: either the extracted folder
-#              (node-v22.x-linux-x64) or its bin/ — whichever holds the node binary is put on PATH
+#   --node     Node 22+ for this check only: a Node folder (node-v22.x-linux-x64) or its bin/ —
+#              whichever holds the node binary is put on PATH. Default: $VIDEO_NODE_BIN if set.
 #
-# Checks Node >= 22, npx, ffmpeg/ffprobe, Noto Sans CJK fonts, the chrome-headless-shell cache,
-# and — only if the pinned CLI is already in the npx cache — runs `hyperframes doctor` via
-# `npx --no-install --offline` (cache only, never the registry). Missing pieces are listed with suggested install commands; nothing is run.
+# Checks Node >= 22, npx, ffmpeg/ffprobe, a Korean font (Noto Sans CJK KR; on macOS the system
+# Apple SD Gothic Neo is accepted as the template's fallback), the chrome-headless-shell cache, and
+# the pinned CLI in the npx cache — then runs `hyperframes doctor` via `npx --no-install --offline`
+# (cache only, never the registry). Nothing is installed or downloaded.
 # doctor also lists optional extras (Docker daemon, transcription/TTS/music models); when only
 # those fail it prints "Some checks failed" — preflight reports them as notes, not misses.
-# Exit 0 when every required check passes, 1 otherwise. The final "result:" line is the verdict.
+# Works on Linux and macOS (no GNU coreutils needed: falls back to gtimeout or perl for timeouts).
+# Exit / final "result:" line:
+#   0  ready                     — check and render can run offline now
+#   3  needs one-time fetch      — only the CLI and/or Chrome are not cached yet (ask, then fetch: SKILL.md §7)
+#   1  missing                   — something must be installed first (suggested commands printed; ask first)
 set -uo pipefail
 VER=0.8.143
-NODE_DIR=""
+NODE_DIR="${VIDEO_NODE_BIN:-}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --version) VER=$2; shift 2 ;;
     --node) NODE_DIR=$2; shift 2 ;;
-    -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -31,10 +36,19 @@ if [ -n "$NODE_DIR" ]; then
 fi
 export HYPERFRAMES_NO_TELEMETRY=1 HYPERFRAMES_SKIP_SKILLS=1
 
-missing=()
-ok()   { printf '  ok    %-16s %s\n' "$1" "$2"; }
-bad()  { printf '  MISS  %-16s %s\n' "$1" "$2"; missing+=("$1"); }
-note() { printf '  note  %-16s %s\n' "$1" "$2"; }
+missing=() fetch=()
+ok()    { printf '  ok    %-16s %s\n' "$1" "$2"; }
+bad()   { printf '  MISS  %-16s %s\n' "$1" "$2"; missing+=("$1"); }
+fetch() { printf '  FETCH %-16s %s\n' "$1" "$2"; fetch+=("$1"); }
+note()  { printf '  note  %-16s %s\n' "$1" "$2"; }
+# run with a time limit: GNU timeout, Homebrew gtimeout, else perl alarm (stock macOS has no timeout)
+limit() {
+  local s=$1; shift
+  if command -v timeout >/dev/null 2>&1; then timeout "$s" "$@"
+  elif command -v gtimeout >/dev/null 2>&1; then gtimeout "$s" "$@"
+  else perl -e 'alarm shift; exec @ARGV or exit 127' "$s" "$@"; fi
+}
+OS=$(uname -s)
 
 echo "video-making preflight (hyperframes@$VER)"
 
@@ -51,22 +65,28 @@ for b in ffmpeg ffprobe; do
   else bad "$b" "not found"; fi
 done
 
-if command -v fc-list >/dev/null 2>&1; then
-  if fc-list : family | grep -i "Noto Sans CJK KR" >/dev/null; then ok font "Noto Sans CJK KR"
-  else bad font "Noto Sans CJK KR not found (only needed for Korean on-screen text)"; fi
+font_files() { ls /System/Library/Fonts /System/Library/Fonts/Supplemental /Library/Fonts "$HOME/Library/Fonts" 2>/dev/null; }
+if command -v fc-list >/dev/null 2>&1 && fc-list : family | grep -i "Noto Sans CJK KR" >/dev/null; then
+  ok font "Noto Sans CJK KR"
+elif [ "$OS" = Darwin ] && font_files | grep -i -E "NotoSansCJK|NotoSansKR" >/dev/null; then
+  ok font "Noto Sans CJK/KR (font file found)"
+elif [ "$OS" = Darwin ] && font_files | grep -i "AppleSDGothicNeo" >/dev/null; then
+  ok font "Apple SD Gothic Neo (macOS system font) — template style.css falls back to it; glyphs differ from Noto, so line breaks can differ from a Linux render"
+elif command -v fc-list >/dev/null 2>&1; then
+  bad font "Noto Sans CJK KR not found (only needed for Korean on-screen text)"
 else
-  note font "fc-list unavailable — check the CJK font manually"
+  note font "no fc-list and no known Korean font file found — check the font manually"
 fi
 
 if ls -d "$HOME"/.cache/hyperframes/chrome/chrome-headless-shell/*/ >/dev/null 2>&1; then
   ok chrome "$(ls -d "$HOME"/.cache/hyperframes/chrome/chrome-headless-shell/*/ | head -1 | xargs basename)"
 else
-  note chrome "not cached — 'npx --no-install --offline hyperframes@$VER browser ensure' downloads chrome-headless-shell (~260MB) to ~/.cache/hyperframes (ask first)"
+  fetch chrome "not cached — one-time 'npx --no-install --offline hyperframes@$VER browser ensure' downloads chrome-headless-shell (Linux ~260MB, macOS ~95MB) to ~/.cache/hyperframes"
 fi
 
-if command -v npx >/dev/null 2>&1 && timeout 60 npx --no-install --offline "hyperframes@$VER" --version </dev/null >/dev/null 2>&1; then
+if command -v npx >/dev/null 2>&1 && limit 60 npx --no-install --offline "hyperframes@$VER" --version </dev/null >/dev/null 2>&1; then
   ok cli "hyperframes@$VER in npx cache — running doctor"
-  doc=$(timeout 120 npx --no-install --offline "hyperframes@$VER" doctor </dev/null 2>&1 | sed $'s/\x1b\\[[0-9;]*m//g')
+  doc=$(limit 120 npx --no-install --offline "hyperframes@$VER" doctor </dev/null 2>&1 | sed $'s/\x1b\\[[0-9;]*m//g')
   printf '%s\n' "$doc" | sed 's/^/        /'
   # doctor marks failures with ✗; Docker daemon and AI model extras are optional for this skill.
   failed=$(printf '%s\n' "$doc" | grep '✗' | sed 's/^[[:space:]]*✗[[:space:]]*//' || true)
@@ -76,17 +96,21 @@ if command -v npx >/dev/null 2>&1 && timeout 60 npx --no-install --offline "hype
   [ -n "$soft" ] && note doctor "optional only: $soft — 'Some checks failed' above is about these; ignore unless you use render --docker"
   if [ -n "$hard" ]; then bad doctor "$(printf '%s' "$hard" | paste -sd';' -)"; fi
 else
-  note cli "hyperframes@$VER not in npx cache — one-time 'npx --yes hyperframes@$VER --version' downloads it (ask first); then everything runs with --no-install --offline"
+  fetch cli "hyperframes@$VER not in npx cache — one-time 'npx --yes hyperframes@$VER --version' downloads it; then everything runs with --no-install --offline"
 fi
 
-if [ ${#missing[@]} -eq 0 ]; then
+if [ ${#missing[@]} -eq 0 ] && [ ${#fetch[@]} -eq 0 ]; then
   echo "result: ready"
   exit 0
 fi
-echo "result: missing ${missing[*]}"
+if [ ${#missing[@]} -eq 0 ]; then
+  echo "result: needs one-time fetch: ${fetch[*]} — show this to the human, fetch after approval (SKILL.md §7), rerun preflight"
+  exit 3
+fi
+echo "result: missing ${missing[*]}${fetch[*]:+ (and one-time fetch: ${fetch[*]})}"
 echo "suggested installs — show these to the human and run only after approval:"
 has() { case " ${missing[*]} " in *" $1 "*) return 0 ;; esac; return 1; }
-if [ "$(uname -s)" = Darwin ]; then
+if [ "$OS" = Darwin ]; then
   { has node || has npx; } && echo "  brew install node@22 && export PATH=\"\$(brew --prefix node@22)/bin:\$PATH\""
   { has ffmpeg || has ffprobe; } && echo "  brew install ffmpeg"
   has font && echo "  install Noto Sans CJK KR (e.g. brew install --cask font-noto-sans-cjk-kr)"

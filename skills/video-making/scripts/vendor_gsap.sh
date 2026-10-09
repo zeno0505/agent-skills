@@ -49,7 +49,10 @@ if (cd "$tmp" && npm pack "gsap@$GSAP_VER" --offline --silent >/dev/null 2>&1); 
   echo "from npm cache: gsap@$GSAP_VER"
 elif [ "$FETCH" = 1 ]; then
   echo "downloading gsap@$GSAP_VER tarball from the npm registry (approved one-time fetch)"
-  (cd "$tmp" && npm pack "gsap@$GSAP_VER" --silent >/dev/null)
+  if ! (cd "$tmp" && npm pack "gsap@$GSAP_VER" >"$tmp/npm.log" 2>&1); then
+    echo "npm pack failed (network blocked? sandboxed agent?):" >&2; grep -i "error" "$tmp/npm.log" | head -5 >&2
+    echo "Fallback: --from <existing gsap.min.js>, or run this fetch outside the sandbox." >&2; exit 1
+  fi
 else
   echo "gsap@$GSAP_VER is not in the npm cache." >&2
   echo "Ask the human, then rerun with --fetch (one download, ~1.7MB tarball; cached for later runs)," >&2

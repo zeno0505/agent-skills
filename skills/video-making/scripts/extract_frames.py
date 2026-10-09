@@ -48,6 +48,8 @@ def main():
     scenes = json.loads(a.timing.read_text(encoding="utf-8")) if a.timing else scenes_from_html(a.html)
     if not scenes:
         sys.exit("no scenes found")
+    if not a.video.is_file():
+        sys.exit(f"video not found: {a.video} — render first")
     a.out.mkdir(parents=True, exist_ok=True)
     for i, sc in enumerate(scenes, 1):
         t = sc["qa_time"]
