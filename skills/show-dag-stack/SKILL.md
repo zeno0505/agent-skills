@@ -81,5 +81,5 @@ collapsed into one cell — one of them is a decision and the other is a gap.
 ## Constraints
 
 - Modify nothing but the generated `dag.md`.
-- Do not edit `dag.yaml`, do not change code, do not run any `gh stack` mutation.
+- Do not edit `dag.yaml`, do not change code, do not run any branch or stack mutation (`git branch`/`rebase`/`push`, `gh pr`, `gh-stack`).
 - Do not "fix" statuses the renderer reports as unfamiliar — an unfamiliar status is expected.
