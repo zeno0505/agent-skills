@@ -1,0 +1,44 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  blocklist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Public-safety blocklist
+        env:
+          BLOCKLIST_EXTRA: ${{ secrets.BLOCKLIST_EXTRA }}
+        run: |
+          [ -n "$BLOCKLIST_EXTRA" ] || echo "::warning::BLOCKLIST_EXTRA secret not set — only public patterns are checked"
+          bash scripts/check-blocklist.sh
+
+  skills:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml pillow
+      - name: Frontmatter
+        run: python scripts/check-skills.py
+      - name: Byte-compile all scripts
+        run: python -m py_compile $(git ls-files 'skills/*.py')
+      - name: Shell syntax
+        run: for f in $(git ls-files 'skills/*.sh'); do bash -n "$f"; done
+      - name: DAG — summary/portfolio unit tests
+        working-directory: skills/summary-dag-stack/scripts
+        run: python -m unittest test_summary test_portfolio
+      - name: DAG — read/show coverage contract
+        run: python skills/read-dag-stack/scripts/coverage_contract.test.py
+      - name: korean-ai-tell-review — smoke
+        run: |
+          printf '이 글은 다양한 측면에서 중요한 의미를 가진다고 할 수 있습니다.\n' > /tmp/sample.md
+          python skills/korean-ai-tell-review/scripts/tells.py /tmp/sample.md

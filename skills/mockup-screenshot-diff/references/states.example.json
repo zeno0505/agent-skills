@@ -1,0 +1,29 @@
+{
+  "widths": [1440, 900],
+  "deviceScaleFactor": 1,
+  "stepTimeoutMs": 10000,
+  "mockup": { "baseUrl": "file:///ABSOLUTE/PATH/TO/mockup.html" },
+  "app":    { "baseUrl": "http://localhost:5173" },
+  "states": [
+    {
+      "name": "list-empty",
+      "mockup": { "path": "#/list?demo=empty", "steps": [] },
+      "app":    { "path": "/list", "steps": [] },
+      "styles": [
+        { "pair": "page-title", "mockup": "h1", "app": "main h1",
+          "props": ["font-size", "font-weight", "color"] }
+      ]
+    },
+    {
+      "name": "item-open",
+      "mockup": { "path": "#/list", "steps": [ { "click": "[data-demo-item='1']" } ] },
+      "app":    { "path": "/list", "steps": [ { "click": "li[data-item]:first-child" }, { "wait": 300 } ] },
+      "styles": [
+        { "pair": "context-bar", "mockup": ".ctx", "app": ".context-bar",
+          "props": ["padding-left", "padding-right", "height"] },
+        { "pair": "active-mode", "mockup": ".mode .on", "app": ".mode-switch [aria-pressed='true']",
+          "props": ["color", "font-weight", "font-size"] }
+      ]
+    }
+  ]
+}

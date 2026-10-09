@@ -1,0 +1,14 @@
+{
+  "name": "pdf-report-deck",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "slidev slides.md",
+    "export": "slidev export slides.md --output out/deck.pdf --timeout 120000"
+  },
+  "devDependencies": {
+    "@slidev/cli": "^53.0.0",
+    "@slidev/theme-default": "^0.25.0",
+    "playwright-chromium": "^1.63.0"
+  }
+}

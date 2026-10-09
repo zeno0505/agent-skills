@@ -1,0 +1,7 @@
+.blocklist.local
+forbidden-terms.txt
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+out/
