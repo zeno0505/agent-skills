@@ -547,9 +547,20 @@ def cmd_task(data, tasks, args):
     dropped = 0
     for task_id in args.task:
         task = dict(resolve(tasks, task_id))
-        # Normalize verification: missing/null -> []
-        if not isinstance(task.get("verification"), list):
+        # Add verification_status for consumers to check validity
+        verification = task.get("verification")
+        if verification is None:
             task["verification"] = []
+            task["verification_status"] = "none"
+        elif not isinstance(verification, list):
+            # Keep malformed value distinguishable, don't silently convert
+            task["verification_status"] = "invalid"
+        elif not verification:
+            # Empty list
+            task["verification_status"] = "none"
+        else:
+            # Non-empty list
+            task["verification_status"] = "ok"
         if "round" in task:
             url = round_pr_url(data, task.get("round"))
             if url:

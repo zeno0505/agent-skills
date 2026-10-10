@@ -37,4 +37,30 @@ of the task's verification status, using the same validation logic as `show-dag-
 
 Latest entry ordering: chronological comparison of `recorded_at` (parsed to aware datetime), ties broken by list position (append-only).
 
-Use `--task <id>` to retrieve the full `verification` list with all entries.
+## Full Task Output (`--task`)
+
+`--task <id>` returns the full task record including the complete `verification` list and a `verification_status` field:
+
+- `verification_status: "none"`: no verification record (missing, null, or empty list `[]`)
+- `verification_status: "invalid"`: malformed data (non-list value like string or mapping; kept as-is in output)
+- `verification_status: "ok"`: non-empty list (may contain invalid entries; check individual entries)
+
+**Consumers must check `verification_status`, not emptiness**, to distinguish missing data from malformed data.
+
+Examples:
+```yaml
+# Missing/null -> normalized to []
+- id: T-001
+  verification: []
+  verification_status: none
+
+# Malformed (non-list) -> kept as-is with status
+- id: T-002
+  verification: "oops"
+  verification_status: invalid
+
+# Non-empty list
+- id: T-003
+  verification: [{kind: fixed, ref: tc.yaml, verdict: pass, evidence: link, recorded_at: "2026-10-10"}]
+  verification_status: ok
+```
