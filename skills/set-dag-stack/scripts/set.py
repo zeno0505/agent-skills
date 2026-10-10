@@ -257,13 +257,22 @@ def validate_verification_entry(entry):
     if not recorded_at:
         fail("recorded_at 는 필수입니다 (ISO 8601: YYYY-MM-DD 또는 YYYY-MM-DDTHH:MM:SS+offset)")
     
-    # Validate recorded_at is parsable ISO 8601
-    from datetime import datetime
-    try:
-        # Try parsing as ISO 8601
-        datetime.fromisoformat(str(recorded_at).replace("Z", "+00:00"))
-    except (ValueError, AttributeError) as exc:
-        fail(f"recorded_at 가 유효한 ISO 8601 형식이 아닙니다: {recorded_at!r} ({exc})")
+    # Validate recorded_at: only ISO 8601 strings or YAML date/datetime objects are valid
+    # Reject numbers (int, float) and bools (same rule as render.py/query.py)
+    from datetime import datetime, date
+    
+    # Accept YAML date/datetime objects
+    if isinstance(recorded_at, (date, datetime)):
+        pass  # Valid
+    # Accept ISO 8601 strings
+    elif isinstance(recorded_at, str):
+        try:
+            datetime.fromisoformat(recorded_at.replace("Z", "+00:00"))
+        except (ValueError, AttributeError) as exc:
+            fail(f"recorded_at 가 유효한 ISO 8601 형식이 아닙니다: {recorded_at!r} ({exc})")
+    # Reject numbers, bools, and other types
+    else:
+        fail(f"recorded_at 는 ISO 8601 문자열 또는 YAML date/datetime 이어야 합니다 (숫자/bool 불가): {recorded_at!r}")
     
     # ref는 exploratory일 때만 선택, fixed일 때 필수이며 non-empty string
     ref = entry.get("ref")

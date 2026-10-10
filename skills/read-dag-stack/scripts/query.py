@@ -406,7 +406,9 @@ def cmd_brief(path, data, tasks, done_status):
             continue
         blockers = [d for d in task.get("depends_on", []) or [] if status_of.get(d) != done_status]
         if not blockers:
-            ready.append(slim(task, ["id", "title"]))
+            entry = slim(task, ["id", "title"])
+            entry["verification"] = verification_summary(task.get("verification"))
+            ready.append(entry)
 
     entry = current_round(data)
     round_view = None
@@ -545,6 +547,9 @@ def cmd_task(data, tasks, args):
     dropped = 0
     for task_id in args.task:
         task = dict(resolve(tasks, task_id))
+        # Normalize verification: missing/null -> []
+        if not isinstance(task.get("verification"), list):
+            task["verification"] = []
         if "round" in task:
             url = round_pr_url(data, task.get("round"))
             if url:
@@ -590,10 +595,16 @@ def cmd_chain(tasks, task_id, downward, exclude_status):
     hidden = len(chain) - len(kept) - len([c for c in chain if c not in by_id])
     suffix = f" ({hidden}건은 --exclude-status 로 숨김)" if hidden else ""
     note(f"{task_id} {direction} 태스크 {len(kept)}건{suffix}")
+    # Add verification summary to each task
+    result_list = []
+    for cid in kept:
+        entry = slim(by_id[cid], ["id", "title", "status", "depends_on"])
+        entry["verification"] = verification_summary(by_id[cid].get("verification"))
+        result_list.append(entry)
     emit(
         {
             "task": task_id,
-            label: [slim(by_id[cid], ["id", "title", "status", "depends_on"]) for cid in kept],
+            label: result_list,
             "unresolved": [cid for cid in chain if cid not in by_id],
         }
     )
@@ -618,6 +629,7 @@ def cmd_find(tasks, keyword):
                     snippet = text[start : position + SNIPPET_RADIUS].replace("\n", " ").strip()
         if where:
             hit = slim(task, ["id", "title", "status"])
+            hit["verification"] = verification_summary(task.get("verification"))
             hit["matched_in"] = where
             if snippet:
                 hit["snippet"] = snippet

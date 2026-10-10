@@ -38,6 +38,8 @@ jobs:
         run: python -m unittest test_summary test_portfolio
       - name: DAG — read/show coverage contract
         run: python skills/read-dag-stack/scripts/coverage_contract.test.py
+      - name: DAG — verification contract
+        run: python skills/read-dag-stack/scripts/verification_contract.test.py
       - name: korean-ai-tell-review — smoke
         run: |
           printf '이 글은 다양한 측면에서 중요한 의미를 가진다고 할 수 있습니다.\n' > /tmp/sample.md
