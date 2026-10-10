@@ -331,20 +331,59 @@ def e2e_cell(spec) -> str:
     return "**미충족**"
 
 
+def normalize_timestamp(value):
+    """recorded_at를 정렬 가능한 문자열로 정규화한다.
+    
+    ISO 8601 timestamp (date-only or full with time/offset) 또는 Python date/datetime 객체를
+    문자열로 변환. 파싱 실패 시 빈 문자열 반환 (가장 오래된 것으로 취급).
+    """
+    if value is None:
+        return ""
+    # Already string
+    if isinstance(value, str):
+        return value
+    # Python date or datetime object (from YAML parsing)
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    # Unknown type
+    return ""
+
+
 def verification_cell(entries) -> str:
     """태스크의 verification 상태를 한 칸으로 줄인다.
 
-    리스트가 아니거나 비어 있으면 `-`. 가장 최근 항목의 kind와 verdict를 요약해 보인다.
+    리스트가 아니거나 비어 있으면 `—`. 가장 최근 항목의 kind와 verdict를 요약해 보인다.
     예: `fixed pass`, `exploratory fail`, `fixed blocked`
+    
+    순서: recorded_at로 정렬, 동점이면 리스트 위치가 늦을수록 우선 (append-only).
+    잘못된 항목(non-dict, 필수 키 누락, 알 수 없는 kind/verdict)은 건너뛴다.
     """
     if not isinstance(entries, list) or not entries:
         return "—"
-    # 가장 최근 항목 (recorded_at 기준)
-    latest = max(entries, key=lambda e: e.get("recorded_at", ""))
+    
+    # Filter valid entries: dict with kind and verdict
+    valid = []
+    for idx, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            continue
+        kind = entry.get("kind", "")
+        verdict = entry.get("verdict", "")
+        if kind not in ("fixed", "exploratory") or verdict not in ("pass", "fail", "blocked"):
+            continue
+        valid.append((idx, entry))
+    
+    if not valid:
+        return "—"
+    
+    # Sort by (normalized recorded_at, list position)
+    # recorded_at ties (e.g. date-only same day) → later position wins
+    latest_idx, latest = max(
+        valid,
+        key=lambda item: (normalize_timestamp(item[1].get("recorded_at", "")), item[0])
+    )
+    
     kind = latest.get("kind", "")
     verdict = latest.get("verdict", "")
-    if not kind or not verdict:
-        return "—"
     return escape_cell(f"{kind} {verdict}")
 
 

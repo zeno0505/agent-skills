@@ -10,13 +10,14 @@ dag-stack 스킬 패밀리에 태스크별 `verification` 레코드를 추가했
 
 ### Added
 
-- DAG 스택 — 태스크별 `verification` 필드: 각 태스크의 검증 실행 기록을 남기는 선택 리스트. 각 항목은 `kind`(fixed | exploratory), `ref`(TC 경로 또는 설명), `verdict`(pass | fail | blocked), `evidence`(해당 실행의 영구 링크), `recorded_at`(날짜)를 갖는다. `fixed`는 고정 입력(시드 + TC, 선택적으로 앵커 인벤토리)으로 재현 가능하고, `exploratory`는 러너가 시작 상태와 기준을 선택한다. 신뢰 차이는 도구가 아니라 고정 입력에서 온다 — 같은 러너(예: agent-browser)를 두 방식 모두에 쓸 수 있다.
-  - `plan-dag-stack` — 스키마 문서에 `verification[]` 필드 정의와 예시, `kind`/`ref`/`verdict`/`evidence`/`recorded_at` 필드 설명 추가. Backward compatibility 절 추가: 필드 없는 구 dag.yaml은 유효하며 빈 리스트로 취급.
-  - `receive-dag-stack` — 구현자 보고에서 검증 결과를 읽어 `verification` 스냅샷 기록. 보고에 검증 결과가 없으면 필드를 비워 두고(`verification: []`) 절대 지어내지 않음. Verification Snapshot 절 추가.
+- DAG 스택 — 태스크별 `verification` 필드: 각 태스크의 검증 실행 기록을 남기는 선택 리스트. 각 항목은 `kind`(fixed | exploratory), `ref`(TC 경로 또는 설명), `verdict`(pass | fail | blocked), `evidence`(해당 실행의 영구 링크), `recorded_at`(ISO 8601 타임스탬프)를 갖는다. `fixed`는 고정 입력(시드 + TC, 선택적으로 앵커 인벤토리)으로 재현 가능하고, `exploratory`는 러너가 시작 상태와 기준을 선택한다. 신뢰 차이는 도구가 아니라 고정 입력에서 온다 — 같은 러너(예: agent-browser)를 두 방식 모두에 쓸 수 있다.
+  - `plan-dag-stack` — 스키마 문서에 `verification[]` 필드 정의와 예시, `kind`/`ref`/`verdict`/`evidence`/`recorded_at` 필드 설명 추가. `recorded_at`는 date-only 또는 full timestamp 지원 (ISO 8601). 최신 항목 선택: recorded_at로 정렬, 동점이면 리스트 위치가 늦을수록 우선 (append-only). Backward compatibility 절 추가: 필드 없는 구 dag.yaml은 유효하며 빈 리스트로 취급. Append-only 규칙 명시.
+  - `receive-dag-stack` — 구현자 보고에서 검증 결과를 읽어 `verification` 스냅샷 기록. 새 항목은 기존 리스트에 **append** (`set.py --append-item verification`). 보고에 검증 결과가 없으면 아무것도 추가하지 않고 기존 이력을 보존. 절대 기존 항목을 덮어쓰거나 삭제하지 않음. Verification Snapshot 절 추가.
   - `review-dag-stack` — 위험 평가 시 `verification` 필드를 읽고, 변경된 기능에 `fixed` 검증이 없는 태스크를 언급. 봇 승인(CodeRabbit APPROVED / `approved_sha`)을 검증으로 취급하지 않음.
-  - `read-dag-stack` — `query.py`가 태스크 출력에 `verification` 포함, 하위 호환(필드 없으면 빈 리스트).
-  - `show-dag-stack` — `render.py`가 Verification 열 추가 (가장 최근 항목의 kind와 verdict 요약, 예: `fixed pass`, `exploratory fail`, `fixed blocked`). 없으면 `—`. SKILL.md에 Verification 열 설명 추가.
-- README — dag-stack 스킬 버전을 0.5.0으로 갱신.
+  - `read-dag-stack` — `query.py`: 모든 태스크 출력에 `verification` 필드 포함, 하위 호환(필드 없으면 빈 리스트 `[]`로 기본값 설정). load() 함수에서 태스크 추출 시 자동 적용.
+  - `show-dag-stack` — `render.py`: Verification 열 추가 (가장 최근 항목의 kind와 verdict 요약, 예: `fixed pass`, `exploratory fail`, `fixed blocked`). 없으면 `—`. 타임스탬프 정규화 및 순서 정의 구현. 잘못된 항목(non-dict, 필수 키 누락, 알 수 없는 kind/verdict) 방어 코딩: 건너뛰며 render 크래시 방지. SKILL.md에 Verification 열 설명 추가.
+  - `set-dag-stack` — `set.py`: `--append-item verification` 지원 및 validation 추가 (kind ∈ {fixed, exploratory}, verdict ∈ {pass, fail, blocked}, evidence/recorded_at 필수, ref는 fixed일 때 필수). SKILL.md에 verification append 예시 추가.
+- README — dag-stack 스킬 버전을 0.5.0으로 갱신 (plan, receive, review, read, show, set).
 
 ## [0.3.2] - 2026-10-10
 

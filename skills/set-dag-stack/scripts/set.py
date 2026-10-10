@@ -236,6 +236,30 @@ def read_value(args):
     return text.rstrip("\n")
 
 
+def validate_verification_entry(entry):
+    """verification 항목의 필수 조건을 검증한다. 실패 시 fail() 호출."""
+    if not isinstance(entry, dict):
+        fail("verification 항목은 매핑이어야 합니다 (--yaml 과 함께 쓰세요)")
+    
+    kind = entry.get("kind")
+    if kind not in ("fixed", "exploratory"):
+        fail(f"kind 는 'fixed' 또는 'exploratory' 여야 합니다 (받은 값: {kind!r})")
+    
+    verdict = entry.get("verdict")
+    if verdict not in ("pass", "fail", "blocked"):
+        fail(f"verdict 는 'pass', 'fail', 'blocked' 중 하나여야 합니다 (받은 값: {verdict!r})")
+    
+    if "evidence" not in entry or not entry["evidence"]:
+        fail("evidence 는 필수입니다")
+    
+    if "recorded_at" not in entry or not entry["recorded_at"]:
+        fail("recorded_at 는 필수입니다 (ISO 8601: YYYY-MM-DD 또는 YYYY-MM-DDTHH:MM:SS+offset)")
+    
+    # ref는 exploratory일 때만 선택
+    if kind != "exploratory" and "ref" not in entry:
+        fail("ref 는 kind='fixed' 일 때 필수입니다")
+
+
 def check_expect(task, expect):
     if not expect:
         return
@@ -405,6 +429,9 @@ def main():
         if current is not None and not isinstance(current, list):
             fail(f"{field} 는 리스트가 아닙니다")
         item = read_value(args)
+        # verification 필드일 때 validation
+        if field == "verification":
+            validate_verification_entry(item)
         value = list(current or []) + [item]
     else:
         value = read_value(args)

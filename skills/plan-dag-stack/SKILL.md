@@ -143,9 +143,12 @@ Each task may carry an optional `verification` list recording runs of the featur
 - **`evidence`**: a durable link or path pinned to that single run.
   - Examples: a run-log row URL in a notes tool like Notion, a local path, or a link.
   - Do **not** point at a repo's "last run" output file, because the next run overwrites it.
-- **`recorded_at`**: date (YYYY-MM-DD).
+- **`recorded_at`**: ISO 8601 timestamp (date-only like `2026-10-10` or full with time/offset like `2026-10-10T14:30:00+09:00`).
+  - When displaying the latest verification, entries are sorted by `recorded_at`, and ties (e.g. same date) are broken by list position (later wins, since entries are append-only).
 
 An absent `verification` field or an empty list means no verification has been recorded, not that verification is unnecessary.
+
+**Append-only:** New verification results are appended to the list. Never overwrite or clear existing entries. If a task report has no verification result, add nothing — preserve the existing history.
 
 ## Proposing E2E coverage
 

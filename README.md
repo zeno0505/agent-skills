@@ -44,7 +44,7 @@ ln -sfn ~/.agents/skills ~/.claude/skills   # Claude Code — 기존 디렉터�
 | [`track-dag-stack`](skills/track-dag-stack) | 구현·푸시·머지 뒤 dag.yaml을 실제 git/PR 상태와 맞춤 | DAG 공통¹ | 0.2.0 |
 | [`setup-dag-stack`](skills/setup-dag-stack) | 새 워크트리에 라운드 브랜치·노트 링크 복원 | DAG 공통¹, (선택) gh-stack, (선택) Conductor | 0.2.0 |
 | [`read-dag-stack`](skills/read-dag-stack) | dag.yaml 읽기 전용 질의 (상태·의존·대상 파일) | Python 3 + PyYAML | 0.5.0 |
-| [`set-dag-stack`](skills/set-dag-stack) | dag.yaml 쓰기 (검증 포함, 직접 편집 금지) | Python 3 + PyYAML | 0.2.0 |
+| [`set-dag-stack`](skills/set-dag-stack) | dag.yaml 쓰기 (검증 포함, 직접 편집 금지) | Python 3 + PyYAML | 0.5.0 |
 | [`show-dag-stack`](skills/show-dag-stack) | dag.yaml → dag.md 렌더 | Python 3 + PyYAML, (선택) Obsidian 볼트 | 0.5.0 |
 | [`summary-dag-stack`](skills/summary-dag-stack) | 남은 일·진행 상황을 사람이 읽는 요약으로 | Python 3 + PyYAML | 0.1.0 |
 | [`migrate-dag-stack`](skills/migrate-dag-stack) | 태스크별 PR 스키마(v1)를 라운드 모델(v2)로 승격 | Python 3 + PyYAML, gh | 0.1.0 |

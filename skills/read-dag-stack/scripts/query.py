@@ -66,6 +66,10 @@ def load(path: Path):
         print("[dag-query] Error: dag.yaml 이 비었거나 매핑이 아닙니다")
         sys.exit(1)
     tasks = [t for phase in data.get("phases", []) or [] for t in phase.get("tasks", []) or []]
+    # Ensure verification field exists with default [] for backward compatibility
+    for task in tasks:
+        if "verification" not in task:
+            task["verification"] = []
     return raw, data, tasks
 
 
@@ -409,9 +413,6 @@ def cmd_task(data, tasks, args):
     dropped = 0
     for task_id in args.task:
         task = dict(resolve(tasks, task_id))
-        # Ensure verification field exists for backward compatibility
-        if "verification" not in task:
-            task["verification"] = []
         if "round" in task:
             url = round_pr_url(data, task.get("round"))
             if url:
