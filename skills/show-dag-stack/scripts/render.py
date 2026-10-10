@@ -204,6 +204,7 @@ def collect(data: dict):
                     "target_files": [str(f) for f in (task.get("target_files") or [])],
                     "round": task.get("round"),
                     "e2e": task.get("e2e"),
+                    "verification": task.get("verification", []),
                 }
             )
 
@@ -330,6 +331,134 @@ def e2e_cell(spec) -> str:
     return "**미충족**"
 
 
+def normalize_timestamp(value):
+    """recorded_at를 aware datetime으로 파싱한다.
+    
+    ISO 8601 timestamp (date-only, naive, or with offset) 또는 Python date/datetime 객체를
+    aware datetime으로 변환하여 chronological comparison 가능하게 한다.
+    
+    - date-only (2026-10-10) → start of day UTC
+    - naive datetime → treat as UTC
+    - aware datetime → as-is
+    - unparsable → None (oldest)
+    
+    Returns: aware datetime or None
+    """
+    from datetime import datetime, timezone
+    
+    if value is None:
+        return None
+    
+    # Python date object
+    if hasattr(value, "year") and not hasattr(value, "hour"):
+        # date object → datetime at start of day UTC
+        from datetime import datetime, timezone
+        return datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
+    
+    # Python datetime object
+    if hasattr(value, "isoformat") and hasattr(value, "hour"):
+        if value.tzinfo is None:
+            # naive → treat as UTC
+            return value.replace(tzinfo=timezone.utc)
+        return value  # already aware
+    
+    # String: parse ISO 8601
+    if isinstance(value, str):
+        try:
+            # Try fromisoformat (handles date-only, naive, Z, +HH:MM)
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                # naive → treat as UTC
+                return dt.replace(tzinfo=timezone.utc)
+            return dt
+        except (ValueError, AttributeError):
+            return None
+    
+    # Unknown type
+    return None
+
+
+def verification_cell(entries) -> str:
+    """태스크의 verification 상태를 한 칸으로 줄인다.
+
+    - No record (missing or null): `—`
+    - Malformed (non-list or all entries invalid): `invalid`
+    - Valid entries exist: 최신 valid의 `kind verdict`
+    
+    순서: recorded_at chronological comparison, 동점이면 리스트 위치 우선 (append-only).
+    
+    Valid entry rules:
+    - kind in {fixed, exploratory}
+    - verdict in {pass, fail, blocked}
+    - evidence: non-empty string
+    - recorded_at: parsable (ISO 8601 or YAML date/datetime)
+    - ref: non-empty string when kind=fixed
+    """
+    from datetime import datetime, timezone
+    
+    # Missing or null -> no record
+    if entries is None:
+        return "—"
+    
+    # Non-list -> invalid (malformed data)
+    if not isinstance(entries, list):
+        return "invalid"
+    
+    # Empty list -> no record
+    if not entries:
+        return "—"
+    
+    # entries가 있는지 확인 (empty list vs entries exist)
+    has_any_entries = len(entries) > 0
+    
+    # Filter valid entries: dict with kind and verdict and required fields
+    valid = []
+    for idx, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            continue
+        kind = entry.get("kind", "")
+        verdict = entry.get("verdict", "")
+        evidence = entry.get("evidence")
+        recorded_at = entry.get("recorded_at")
+        ref = entry.get("ref")
+        
+        # Check required fields
+        if kind not in ("fixed", "exploratory"):
+            continue
+        if verdict not in ("pass", "fail", "blocked"):
+            continue
+        # evidence must be non-empty string
+        if not isinstance(evidence, str) or not evidence:
+            continue
+        # recorded_at must be parsable
+        if normalize_timestamp(recorded_at) is None:
+            continue
+        # ref must be non-empty string when kind=fixed
+        if kind == "fixed" and (not isinstance(ref, str) or not ref):
+            continue
+        
+        valid.append((idx, entry))
+    
+    # If entries exist but none valid → invalid
+    if has_any_entries and not valid:
+        return "invalid"
+    
+    # If no entries at all → —
+    if not valid:
+        return "—"
+    
+    # Sort by (parsed recorded_at, list position)
+    # recorded_at ties or unparsable → later position wins
+    latest_idx, latest = max(
+        valid,
+        key=lambda item: (normalize_timestamp(item[1].get("recorded_at", "")) or datetime.min.replace(tzinfo=timezone.utc), item[0])
+    )
+    
+    kind = latest.get("kind", "")
+    verdict = latest.get("verdict", "")
+    return escape_cell(f"{kind} {verdict}")
+
+
 def render_table(tasks, links=None):
     """태스크 표. `links` 에 있는 id 는 별칭 wikilink 로, 없으면 평문으로 낸다.
 
@@ -339,8 +468,8 @@ def render_table(tasks, links=None):
     """
     links = links or {}
     rows = [
-        "| ID | Title | Status | Round | E2E | Depends On | Target Files |",
-        "|----|-------|--------|-------|-----|------------|--------------|",
+        "| ID | Title | Status | Round | E2E | Verification | Depends On | Target Files |",
+        "|----|-------|--------|-------|-----|--------------|------------|--------------|",
     ]
     for task in tasks:
         id_cell = escape_cell(format_task_ref(task["id"], links))
@@ -352,7 +481,7 @@ def render_table(tasks, links=None):
         rows.append(
             f'| {id_cell} | {escape_cell(task["title"])} '
             f'| {escape_cell(task["status"])} | {rnd} | {e2e_cell(task.get("e2e"))} '
-            f'| {deps} | {files} |'
+            f'| {verification_cell(task.get("verification", []))} | {deps} | {files} |'
         )
     return "\n".join(rows)
 

@@ -58,6 +58,9 @@ The task table carries an `E2E` column with four values. `—` means no `e2e` fi
 `**미충족**` means required and uncovered. The first two look alike in prose and must not be
 collapsed into one cell — one of them is a decision and the other is a gap.
 
+The `Verification` column shows the most recent verification run's kind and verdict (e.g.
+`fixed pass`, `exploratory fail`, `fixed blocked`). `—` means no verification has been recorded.
+
 ## Renderer contract
 
 - **It does not know status names.** Statuses are read from `dag.yaml` at run time and each

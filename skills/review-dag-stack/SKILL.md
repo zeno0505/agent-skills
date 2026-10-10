@@ -83,11 +83,14 @@ gh api repos/<owner>/<repo>/pulls/<n>/comments/<comment_id>/replies -f body='…
 
 8. Record the triage outcome in the round's tasks' `deviations` where a finding contradicted
    the task's stated scope.
-9. Drain the checklist for the tasks that just became `done`. A line whose check is now covered
+9. Read each task's `verification` field when assessing risk. **Mention any task whose touched
+   features have no `fixed` verification.** Never treat bot approval (e.g. CodeRabbit APPROVED /
+   `approved_sha`) as verification.
+10. Drain the checklist for the tasks that just became `done`. A line whose check is now covered
    by an automated TC leaves the checklist and its TC id goes into that task's `e2e.covered_by`.
    A line that is still only a human check stays. The checklist is a queue, and a queue that
    only grows tells you nothing.
-10. Call `track-dag-stack` to reconcile. It reports which of the newly `done` tasks finished
+11. Call `track-dag-stack` to reconcile. It reports which of the newly `done` tasks finished
    without the coverage they declared.
 
 ## Risk Tier Assessment

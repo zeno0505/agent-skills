@@ -41,9 +41,32 @@ description: Use when a subagent is dispatched by run-dag-stack to implement, re
    하나만 보는 서브에이전트는 그 정보를 갖고 있지 않다.
 9. 브라우저로만 확인 가능한 것이 있으면 `{note_dir}/e2e-checklist.md` 에
    `- [ ] [T-XXX] 확인할 것` 형식으로 줄을 추가한다. 직접 검수하지는 않는다.
-10. 중단 가능성이 있거나 막히면 마지막에 `## Resume Point`를 남긴다.
+10. **구현자 보고에 검증 결과가 있으면 `verification` 스냅샷을 기록한다.** 구현자가 TC를
+    돌렸거나 agent-browser로 확인한 것을 그 순간의 스냅샷으로 남긴다. 새 항목은
+    기존 `verification` 리스트에 **append**한다 (`set.py --append-item verification`).
+    보고에 검증 결과가 없으면 아무것도 추가하지 않고 기존 이력을 보존한다.
+    절대 기존 항목을 덮어쓰거나 삭제하지 않는다.
+11. 중단 가능성이 있거나 막히면 마지막에 `## Resume Point`를 남긴다.
 
 Resume Point에는 다음 액션, 현재 브랜치/worktree, 변경 파일, 미완료 검증, 막힌 이유를 쓴다.
+
+### Verification Snapshot
+
+구현자의 `implementation.md` Verification 절에서 검증 결과를 읽어 `dag.yaml`의 `verification` 필드에 기록한다.
+
+- **`kind`**: `fixed` (TC 등 고정 입력으로 재현 가능) 또는 `exploratory` (에이전트가 시작 상태와 기준을 선택)
+  - 같은 도구(예: agent-browser)라도 TC 없이 돌렸으면 `exploratory`다.
+- **`ref`**: TC 경로 또는 확인한 것의 짧은 설명. `exploratory`는 선택.
+- **`verdict`**: `pass` | `fail` | `blocked`
+  - `pass` — 기능이 정상 동작
+  - `fail` — 기능이 깨짐
+  - `blocked` — 환경이 실행을 막음(자격증명 없음, 서비스 다운 등)
+- **`evidence`**: 그 실행 한 번을 가리키는 영구 링크 또는 경로
+  - 예: 노션 런로그 행 URL, 로컬 경로, 링크. 저장소의 「마지막 실행」 출력 파일은 안 됨(다음 실행이 덮어씀).
+- **`recorded_at`**: ISO 8601 타임스탬프 (date-only `2026-10-10` 또는 full `2026-10-10T14:30:00+09:00`)
+
+**Append-only:** 새 항목은 기존 리스트에 추가한다 (`set.py --append-item verification`).
+보고에 검증 결과가 없으면 아무것도 추가하지 않고 기존 이력을 보존한다. 절대 기존 항목을 덮어쓰거나 삭제하지 않는다.
 
 ### Integration Mode
 

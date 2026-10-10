@@ -82,6 +82,15 @@ cat draft.md | set.py --task T-137 --set description --value-file -
 printf '[2026-08-21] 범위를 벗어난 파일 둘을 함께 고쳤다.\n' \
   | set.py --task T-137 --append-item deviations --value-file -
 
+# verification 항목 덧붙이기 (append-only, 기존 이력 보존)
+cat <<'EOF' | set.py --task T-137 --append-item verification --value-file - --yaml
+kind: fixed
+ref: e2e/profile-upload.yaml
+verdict: pass
+evidence: https://notion.so/project/runs#row-abc123
+recorded_at: "2026-10-10T14:30:00+09:00"
+EOF
+
 # 새 태스크
 set.py --add-task --phase feature --value-file new-task.yaml --yaml
 ```
