@@ -421,17 +421,29 @@ def render_rounds(data, tasks):
         return None
     per_round = Counter(t.get("round") for t in tasks)
     rows = [
-        "| 회차 | 브랜치 | Base | 상태 | 태스크 | PR |",
-        "|------|--------|------|------|--------|-----|",
+        "| 회차 | 브랜치 | Base | 상태 | 리스크 | 태스크 | PR |",
+        "|------|--------|------|------|--------|--------|-----|",
     ]
     for entry in entries:
         number = entry.get("number")
         url = entry.get("pr_url")
         link = f"[#{str(url).rstrip('/').rsplit('/', 1)[-1]}]({url})" if url else "—"
+        
+        # Format risk tier with reason if available
+        risk_tier = entry.get("risk_tier")
+        risk_reason = entry.get("risk_reason")
+        if risk_tier:
+            risk_cell = escape_cell(str(risk_tier))
+            if risk_reason and len(str(risk_reason)) <= 40:
+                risk_cell += f"<br/><small>{escape_cell(str(risk_reason))}</small>"
+        else:
+            risk_cell = "—"
+        
         rows.append(
             f'| {escape_cell(str(number))} | {escape_cell(str(entry.get("branch") or "—"))} '
             f'| {escape_cell(str(entry.get("base") or "—"))} '
             f'| {escape_cell(str(entry.get("state") or "—"))} '
+            f'| {risk_cell} '
             f'| {per_round.get(number, 0)} | {link} |'
         )
     return "\n".join(rows)

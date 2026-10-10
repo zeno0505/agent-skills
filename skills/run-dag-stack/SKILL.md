@@ -60,10 +60,11 @@ git diff <base>...HEAD --shortstat
    When changed lines reach `round_line_budget` (default 2500), **propose closing the round**
    and stop for approval. Do not close it yourself.
 
-   Include `query.py --coverage` totals in that proposal, and `--brief`'s `mine` checklist count.
-   This is a line on the approval you already stop for, not a new gate: the coverage check itself
-   hangs on task completion and belongs to `track-dag-stack`. Never refuse to close a round over
-   coverage — report it and let the user decide.
+   Include `query.py --coverage` totals and `--pr` output (including risk tier if assessed) in
+   that proposal, and `--brief`'s `mine` checklist count. This is a line on the approval you
+   already stop for, not a new gate: the coverage check itself hangs on task completion and
+   belongs to `track-dag-stack`. Never refuse to close a round over coverage — report it and
+   let the user decide.
 
    Projects that do not use the round model never reach this step. `--brief` prints a `gate` line
    for those; such a project merges into `base_branch` on verification without opening a PR at all. Do not
