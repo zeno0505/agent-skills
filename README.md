@@ -36,16 +36,16 @@ ln -sfn ~/.agents/skills ~/.claude/skills   # Claude Code — 기존 디렉터�
 | [`pdf-report`](skills/pdf-report) | Slidev로 사람용 PDF 보고서 작성 — 자가완결(용어·출처 부록) + 페이지별 시각 QA, 그림은 `image-making` 호출 | Node, Slidev 53, playwright-chromium, poppler-utils, Python + Pillow | 0.1.1 |
 | [`video-making`](skills/video-making) | 흐름·변화·PR 설명을 90초 이하 무음 설명 영상(MP4)으로 — HyperFrames(HTML→MP4), 스토리보드 승인 게이트, 글자량 기반 장면 길이, 장면별 프레임 검수·재렌더 체크섬 확인, 그림은 `image-making` 호출 | Node 22+, `npx hyperframes@0.8.143`(1회 받은 뒤 `--no-install --offline`), FFmpeg, chrome-headless-shell, 프로젝트별 `gsap@3.14.2`(npm에서), Python 3 — Linux·macOS | 0.1.2 |
 | [`collect-dag-stack`](skills/collect-dag-stack) | 계획 전에 Notion·Jira·Figma·Slack 요구사항을 1회 수집해 출처·지문 달린 `context.md`로 정리하고 `plan-dag-stack`에 넘김 | 각 소스 읽기 도구(MCP 등) | 0.2.0 |
-| [`plan-dag-stack`](skills/plan-dag-stack) | 프로젝트를 DAG(dag.yaml)로 계획, 라운드 단위 브랜치·PR | DAG 공통¹ | 0.5.0 |
-| [`run-dag-stack`](skills/run-dag-stack) | pending 태스크를 라운드 브랜치에 커밋하고 PR 올리기 | DAG 공통¹, CodeRabbit, (선택) gh-stack | 0.5.0 |
-| [`receive-dag-stack`](skills/receive-dag-stack) | `run-dag-stack`이 파견한 서브에이전트의 실행 계약 — 재개 가능한 기록(append-only `implementation.md`), 커밋까지만, 리뷰·리뷰 수정 모드 | git | 0.5.0 |
-| [`review-dag-stack`](skills/review-dag-stack) | 라운드 PR의 CodeRabbit 리뷰를 읽고 반영 태스크로 정리 | DAG 공통¹, CodeRabbit | 0.5.0 |
+| [`plan-dag-stack`](skills/plan-dag-stack) | 프로젝트를 DAG(dag.yaml)로 계획, 라운드 단위 브랜치·PR | DAG 공통¹ | 0.2.0 |
+| [`run-dag-stack`](skills/run-dag-stack) | pending 태스크를 라운드 브랜치에 커밋하고 PR 올리기 | DAG 공통¹, CodeRabbit, (선택) gh-stack | 0.2.0 |
+| [`receive-dag-stack`](skills/receive-dag-stack) | `run-dag-stack`이 파견한 서브에이전트의 실행 계약 — 재개 가능한 기록(append-only `implementation.md`), 커밋까지만, 리뷰·리뷰 수정 모드 | git | 0.2.0 |
+| [`review-dag-stack`](skills/review-dag-stack) | 라운드 PR의 CodeRabbit 리뷰를 읽고 반영 태스크로 정리 | DAG 공통¹, CodeRabbit | 0.1.0 |
 | [`append-dag-stack`](skills/append-dag-stack) | 후속·QA 수정·리뷰 반영·요구 변경을 기존 DAG에 추가 | DAG 공통¹ | 0.2.0 |
 | [`track-dag-stack`](skills/track-dag-stack) | 구현·푸시·머지 뒤 dag.yaml을 실제 git/PR 상태와 맞춤 | DAG 공통¹ | 0.2.0 |
 | [`setup-dag-stack`](skills/setup-dag-stack) | 새 워크트리에 라운드 브랜치·노트 링크 복원 | DAG 공통¹, (선택) gh-stack, (선택) Conductor | 0.2.0 |
-| [`read-dag-stack`](skills/read-dag-stack) | dag.yaml 읽기 전용 질의 (상태·의존·대상 파일) | Python 3 + PyYAML | 0.5.0 |
-| [`set-dag-stack`](skills/set-dag-stack) | dag.yaml 쓰기 (검증 포함, 직접 편집 금지) | Python 3 + PyYAML | 0.5.0 |
-| [`show-dag-stack`](skills/show-dag-stack) | dag.yaml → dag.md 렌더 | Python 3 + PyYAML, (선택) Obsidian 볼트 | 0.5.0 |
+| [`read-dag-stack`](skills/read-dag-stack) | dag.yaml 읽기 전용 질의 (상태·의존·대상 파일) | Python 3 + PyYAML | 0.1.0 |
+| [`set-dag-stack`](skills/set-dag-stack) | dag.yaml 쓰기 (검증 포함, 직접 편집 금지) | Python 3 + PyYAML | 0.2.0 |
+| [`show-dag-stack`](skills/show-dag-stack) | dag.yaml → dag.md 렌더 | Python 3 + PyYAML, (선택) Obsidian 볼트 | 0.2.0 |
 | [`summary-dag-stack`](skills/summary-dag-stack) | 남은 일·진행 상황을 사람이 읽는 요약으로 | Python 3 + PyYAML | 0.1.0 |
 | [`migrate-dag-stack`](skills/migrate-dag-stack) | 태스크별 PR 스키마(v1)를 라운드 모델(v2)로 승격 | Python 3 + PyYAML, gh | 0.1.0 |
 

@@ -332,54 +332,103 @@ def e2e_cell(spec) -> str:
 
 
 def normalize_timestamp(value):
-    """recorded_at를 정렬 가능한 문자열로 정규화한다.
+    """recorded_at를 aware datetime으로 파싱한다.
     
-    ISO 8601 timestamp (date-only or full with time/offset) 또는 Python date/datetime 객체를
-    문자열로 변환. 파싱 실패 시 빈 문자열 반환 (가장 오래된 것으로 취급).
+    ISO 8601 timestamp (date-only, naive, or with offset) 또는 Python date/datetime 객체를
+    aware datetime으로 변환하여 chronological comparison 가능하게 한다.
+    
+    - date-only (2026-10-10) → start of day UTC
+    - naive datetime → treat as UTC
+    - aware datetime → as-is
+    - unparsable → None (oldest)
+    
+    Returns: aware datetime or None
     """
+    from datetime import datetime, timezone
+    
     if value is None:
-        return ""
-    # Already string
+        return None
+    
+    # Python date object
+    if hasattr(value, "year") and not hasattr(value, "hour"):
+        # date object → datetime at start of day UTC
+        from datetime import datetime, timezone
+        return datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
+    
+    # Python datetime object
+    if hasattr(value, "isoformat") and hasattr(value, "hour"):
+        if value.tzinfo is None:
+            # naive → treat as UTC
+            return value.replace(tzinfo=timezone.utc)
+        return value  # already aware
+    
+    # String: parse ISO 8601
     if isinstance(value, str):
-        return value
-    # Python date or datetime object (from YAML parsing)
-    if hasattr(value, "isoformat"):
-        return value.isoformat()
+        try:
+            # Try fromisoformat (handles date-only, naive, Z, +HH:MM)
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                # naive → treat as UTC
+                return dt.replace(tzinfo=timezone.utc)
+            return dt
+        except (ValueError, AttributeError):
+            return None
+    
     # Unknown type
-    return ""
+    return None
 
 
 def verification_cell(entries) -> str:
     """태스크의 verification 상태를 한 칸으로 줄인다.
 
-    리스트가 아니거나 비어 있으면 `—`. 가장 최근 항목의 kind와 verdict를 요약해 보인다.
-    예: `fixed pass`, `exploratory fail`, `fixed blocked`
+    - 레코드 없음 (빈 리스트 or None): `—`
+    - 항목 있지만 전부 invalid: `invalid`
+    - valid 항목 있음: 최신 valid의 `kind verdict`
     
-    순서: recorded_at로 정렬, 동점이면 리스트 위치가 늦을수록 우선 (append-only).
-    잘못된 항목(non-dict, 필수 키 누락, 알 수 없는 kind/verdict)은 건너뛴다.
+    순서: recorded_at chronological comparison, 동점이면 리스트 위치 우선 (append-only).
     """
+    from datetime import datetime, timezone
+    
     if not isinstance(entries, list) or not entries:
         return "—"
     
-    # Filter valid entries: dict with kind and verdict
+    # entries가 있는지 확인 (empty list vs entries exist)
+    has_any_entries = len(entries) > 0
+    
+    # Filter valid entries: dict with kind and verdict and required fields
     valid = []
     for idx, entry in enumerate(entries):
         if not isinstance(entry, dict):
             continue
         kind = entry.get("kind", "")
         verdict = entry.get("verdict", "")
-        if kind not in ("fixed", "exploratory") or verdict not in ("pass", "fail", "blocked"):
+        # Check required fields
+        if kind not in ("fixed", "exploratory"):
+            continue
+        if verdict not in ("pass", "fail", "blocked"):
+            continue
+        if not entry.get("evidence"):
+            continue
+        if not entry.get("recorded_at"):
+            continue
+        # ref is required for fixed
+        if kind == "fixed" and "ref" not in entry:
             continue
         valid.append((idx, entry))
     
+    # If entries exist but none valid → invalid
+    if has_any_entries and not valid:
+        return "invalid"
+    
+    # If no entries at all → —
     if not valid:
         return "—"
     
-    # Sort by (normalized recorded_at, list position)
-    # recorded_at ties (e.g. date-only same day) → later position wins
+    # Sort by (parsed recorded_at, list position)
+    # recorded_at ties or unparsable → later position wins
     latest_idx, latest = max(
         valid,
-        key=lambda item: (normalize_timestamp(item[1].get("recorded_at", "")), item[0])
+        key=lambda item: (normalize_timestamp(item[1].get("recorded_at", "")) or datetime.min.replace(tzinfo=timezone.utc), item[0])
     )
     
     kind = latest.get("kind", "")

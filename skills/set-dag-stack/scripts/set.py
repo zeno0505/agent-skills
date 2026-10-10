@@ -252,8 +252,17 @@ def validate_verification_entry(entry):
     if "evidence" not in entry or not entry["evidence"]:
         fail("evidence 는 필수입니다")
     
-    if "recorded_at" not in entry or not entry["recorded_at"]:
+    recorded_at = entry.get("recorded_at")
+    if not recorded_at:
         fail("recorded_at 는 필수입니다 (ISO 8601: YYYY-MM-DD 또는 YYYY-MM-DDTHH:MM:SS+offset)")
+    
+    # Validate recorded_at is parsable ISO 8601
+    from datetime import datetime
+    try:
+        # Try parsing as ISO 8601
+        datetime.fromisoformat(str(recorded_at).replace("Z", "+00:00"))
+    except (ValueError, AttributeError) as exc:
+        fail(f"recorded_at 가 유효한 ISO 8601 형식이 아닙니다: {recorded_at!r} ({exc})")
     
     # ref는 exploratory일 때만 선택
     if kind != "exploratory" and "ref" not in entry:

@@ -67,8 +67,9 @@ def load(path: Path):
         sys.exit(1)
     tasks = [t for phase in data.get("phases", []) or [] for t in phase.get("tasks", []) or []]
     # Ensure verification field exists with default [] for backward compatibility
+    # Treat missing, null, and non-list as []
     for task in tasks:
-        if "verification" not in task:
+        if not isinstance(task.get("verification"), list):
             task["verification"] = []
     return raw, data, tasks
 
