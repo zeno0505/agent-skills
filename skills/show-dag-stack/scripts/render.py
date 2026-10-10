@@ -204,6 +204,7 @@ def collect(data: dict):
                     "target_files": [str(f) for f in (task.get("target_files") or [])],
                     "round": task.get("round"),
                     "e2e": task.get("e2e"),
+                    "verification": task.get("verification", []),
                 }
             )
 
@@ -330,6 +331,23 @@ def e2e_cell(spec) -> str:
     return "**미충족**"
 
 
+def verification_cell(entries) -> str:
+    """태스크의 verification 상태를 한 칸으로 줄인다.
+
+    리스트가 아니거나 비어 있으면 `-`. 가장 최근 항목의 kind와 verdict를 요약해 보인다.
+    예: `fixed pass`, `exploratory fail`, `fixed blocked`
+    """
+    if not isinstance(entries, list) or not entries:
+        return "—"
+    # 가장 최근 항목 (recorded_at 기준)
+    latest = max(entries, key=lambda e: e.get("recorded_at", ""))
+    kind = latest.get("kind", "")
+    verdict = latest.get("verdict", "")
+    if not kind or not verdict:
+        return "—"
+    return escape_cell(f"{kind} {verdict}")
+
+
 def render_table(tasks, links=None):
     """태스크 표. `links` 에 있는 id 는 별칭 wikilink 로, 없으면 평문으로 낸다.
 
@@ -339,8 +357,8 @@ def render_table(tasks, links=None):
     """
     links = links or {}
     rows = [
-        "| ID | Title | Status | Round | E2E | Depends On | Target Files |",
-        "|----|-------|--------|-------|-----|------------|--------------|",
+        "| ID | Title | Status | Round | E2E | Verification | Depends On | Target Files |",
+        "|----|-------|--------|-------|-----|--------------|------------|--------------|",
     ]
     for task in tasks:
         id_cell = escape_cell(format_task_ref(task["id"], links))
@@ -352,7 +370,7 @@ def render_table(tasks, links=None):
         rows.append(
             f'| {id_cell} | {escape_cell(task["title"])} '
             f'| {escape_cell(task["status"])} | {rnd} | {e2e_cell(task.get("e2e"))} '
-            f'| {deps} | {files} |'
+            f'| {verification_cell(task.get("verification", []))} | {deps} | {files} |'
         )
     return "\n".join(rows)
 

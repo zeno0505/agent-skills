@@ -95,6 +95,12 @@ phases:
         commits: []      # commit hashes; a task may land in more than one
         status: pending
         deviations: []
+        verification: []  # optional. Each entry records one verification run
+          # - kind: fixed | exploratory
+          #   ref: "path/to/tc.yaml" or short description (optional for exploratory)
+          #   verdict: pass | fail | blocked
+          #   evidence: durable link or path to that single run
+          #   recorded_at: "2026-10-10"
         e2e:             # optional. Absent means "not decided yet", never "not applicable"
           required: true
           covered_by: []           # TC ids that exercise this task
@@ -120,6 +126,26 @@ phases:
 looking) → `done` (bot approved). Plus `blocked`, `deferred`, `superseded`.
 
 `review_required` is legacy-only — never use it in a `schema: 2` file.
+
+### `verification[]` field
+
+Each task may carry an optional `verification` list recording runs of the feature. Each entry has:
+
+- **`kind`**: `fixed` | `exploratory`
+  - `fixed` means the run used fixed inputs (seed + TC, optionally an anchor inventory), making it reproducible.
+  - `exploratory` means the runner chose the start state and the criteria itself, e.g. agent-browser with no TC.
+  - The trust difference comes from **fixed inputs**, not from the tool: the same runner (e.g. agent-browser) can be used in both kinds.
+- **`ref`**: path to the TC or a short description of what was checked. Optional for `exploratory` runs.
+- **`verdict`**: `pass` | `fail` | `blocked`
+  - `pass` — the feature behaves correctly.
+  - `fail` — the feature is broken.
+  - `blocked` — the environment blocked the run (e.g. credential missing, service down).
+- **`evidence`**: a durable link or path pinned to that single run.
+  - Examples: a run-log row URL in a notes tool like Notion, a local path, or a link.
+  - Do **not** point at a repo's "last run" output file, because the next run overwrites it.
+- **`recorded_at`**: date (YYYY-MM-DD).
+
+An absent `verification` field or an empty list means no verification has been recorded, not that verification is unnecessary.
 
 ## Proposing E2E coverage
 
@@ -215,3 +241,10 @@ decides what goes in them; it does not write them.
 - Do not add design-verification assets to the note directory. They belong to the asset repo.
 - Never fix a design mapping by yourself. Propose it, and say which design nodes you expect to
   have no element at all — that list is the part a later reader cannot reconstruct.
+
+## Backward Compatibility
+
+Old `dag.yaml` files without the `verification` field remain valid. The field is optional:
+- An absent `verification` field is treated as an empty list (`[]`).
+- Tools reading `dag.yaml` default to `[]` when the field is missing.
+- Tools writing `dag.yaml` may omit the field or write `verification: []` for tasks with no verification.

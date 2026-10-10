@@ -409,6 +409,9 @@ def cmd_task(data, tasks, args):
     dropped = 0
     for task_id in args.task:
         task = dict(resolve(tasks, task_id))
+        # Ensure verification field exists for backward compatibility
+        if "verification" not in task:
+            task["verification"] = []
         if "round" in task:
             url = round_pr_url(data, task.get("round"))
             if url:

@@ -4,6 +4,20 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-10
+
+dag-stack 스킬 패밀리에 태스크별 `verification` 레코드를 추가했습니다 (0.5.0).
+
+### Added
+
+- DAG 스택 — 태스크별 `verification` 필드: 각 태스크의 검증 실행 기록을 남기는 선택 리스트. 각 항목은 `kind`(fixed | exploratory), `ref`(TC 경로 또는 설명), `verdict`(pass | fail | blocked), `evidence`(해당 실행의 영구 링크), `recorded_at`(날짜)를 갖는다. `fixed`는 고정 입력(시드 + TC, 선택적으로 앵커 인벤토리)으로 재현 가능하고, `exploratory`는 러너가 시작 상태와 기준을 선택한다. 신뢰 차이는 도구가 아니라 고정 입력에서 온다 — 같은 러너(예: agent-browser)를 두 방식 모두에 쓸 수 있다.
+  - `plan-dag-stack` — 스키마 문서에 `verification[]` 필드 정의와 예시, `kind`/`ref`/`verdict`/`evidence`/`recorded_at` 필드 설명 추가. Backward compatibility 절 추가: 필드 없는 구 dag.yaml은 유효하며 빈 리스트로 취급.
+  - `receive-dag-stack` — 구현자 보고에서 검증 결과를 읽어 `verification` 스냅샷 기록. 보고에 검증 결과가 없으면 필드를 비워 두고(`verification: []`) 절대 지어내지 않음. Verification Snapshot 절 추가.
+  - `review-dag-stack` — 위험 평가 시 `verification` 필드를 읽고, 변경된 기능에 `fixed` 검증이 없는 태스크를 언급. 봇 승인(CodeRabbit APPROVED / `approved_sha`)을 검증으로 취급하지 않음.
+  - `read-dag-stack` — `query.py`가 태스크 출력에 `verification` 포함, 하위 호환(필드 없으면 빈 리스트).
+  - `show-dag-stack` — `render.py`가 Verification 열 추가 (가장 최근 항목의 kind와 verdict 요약, 예: `fixed pass`, `exploratory fail`, `fixed blocked`). 없으면 `—`. SKILL.md에 Verification 열 설명 추가.
+- README — dag-stack 스킬 버전을 0.5.0으로 갱신.
+
 ## [0.3.2] - 2026-10-10
 
 macOS에서 외부 에이전트(Claude Code 헤드리스)로 `video-making`을 처음부터 끝까지 돌려 본 결과와 반복 영상·PDF 운영 피드백을 반영했습니다(`video-making` 0.1.2, `pdf-report` 0.1.1).
