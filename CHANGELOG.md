@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- `weekly-lesson-draft` — 「말투 가이드」 절 추가. 글의 목소리를 블로그 관례인 평서 `~다` 서술체가 아니라 작성자의 평소 채팅 말투(존댓말이면 `~합니다/~데요/~봅니다`, 1인칭 `저/제`)로 맞추도록 규칙화. 말투 1차 패스에 남은 `~다.` 서술문을 기계적으로 훑는 단계, 세 패스 자가체크의 말투 기준도 같이 갱신.
+
 ### Added
 
 - DAG 스택 — 태스크별 `verification` 필드: 각 태스크의 검증 실행 기록을 남기는 선택 리스트. 각 항목은 `kind`(fixed | exploratory), `ref`(TC 경로 또는 설명), `verdict`(pass | fail | blocked), `evidence`(해당 실행의 영구 링크), `recorded_at`(ISO 8601 타임스탬프)를 갖는다. `fixed`는 고정 입력(시드 + TC, 선택적으로 앵커 인벤토리)으로 재현 가능하고, `exploratory`는 러너가 시작 상태와 기준을 선택한다. 신뢰 차이는 도구가 아니라 고정 입력에서 온다 — 같은 러너(예: agent-browser)를 두 방식 모두에 쓸 수 있다.
