@@ -18,3 +18,23 @@ For a project-level status summary or human-readable report, use `summary-dag-st
 The tool is read-only. It does not infer status semantics; callers choose the done status. If a query
 is empty, widen the query instead of reading the whole file. Writes use `set-dag-stack`; human views
 use `show-dag-stack`.
+
+## Verification Summary in List Outputs
+
+`--index` and `--ready` outputs include a `verification` field for each task with a compact summary
+of the task's verification status, using the same validation logic as `show-dag-stack`:
+
+- `null`: no verification record (empty list or missing field)
+- `"invalid"`: entries exist but none are valid (e.g., unparsable date, numeric evidence, missing required fields)
+- `"kind verdict"`: the latest valid entry's kind and verdict (e.g., `"fixed pass"`, `"exploratory fail"`)
+
+**Valid entry rules:**
+- `kind` ∈ {fixed, exploratory}
+- `verdict` ∈ {pass, fail, blocked}
+- `evidence`: non-empty string
+- `recorded_at`: parsable ISO 8601 (date-only or full timestamp with optional Z/offset), or YAML date/datetime
+- `ref`: non-empty string when kind=fixed
+
+Latest entry ordering: chronological comparison of `recorded_at` (parsed to aware datetime), ties broken by list position (append-only).
+
+Use `--task <id>` to retrieve the full `verification` list with all entries.

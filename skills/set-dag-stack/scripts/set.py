@@ -249,8 +249,9 @@ def validate_verification_entry(entry):
     if verdict not in ("pass", "fail", "blocked"):
         fail(f"verdict 는 'pass', 'fail', 'blocked' 중 하나여야 합니다 (받은 값: {verdict!r})")
     
-    if "evidence" not in entry or not entry["evidence"]:
-        fail("evidence 는 필수입니다")
+    evidence = entry.get("evidence")
+    if not isinstance(evidence, str) or not evidence:
+        fail(f"evidence 는 비어있지 않은 문자열이어야 합니다 (받은 값: {evidence!r})")
     
     recorded_at = entry.get("recorded_at")
     if not recorded_at:
@@ -264,9 +265,11 @@ def validate_verification_entry(entry):
     except (ValueError, AttributeError) as exc:
         fail(f"recorded_at 가 유효한 ISO 8601 형식이 아닙니다: {recorded_at!r} ({exc})")
     
-    # ref는 exploratory일 때만 선택
-    if kind != "exploratory" and "ref" not in entry:
-        fail("ref 는 kind='fixed' 일 때 필수입니다")
+    # ref는 exploratory일 때만 선택, fixed일 때 필수이며 non-empty string
+    ref = entry.get("ref")
+    if kind != "exploratory":
+        if not isinstance(ref, str) or not ref:
+            fail(f"ref 는 kind='fixed' 일 때 비어있지 않은 문자열이어야 합니다 (받은 값: {ref!r})")
 
 
 def check_expect(task, expect):

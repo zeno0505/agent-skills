@@ -386,6 +386,13 @@ def verification_cell(entries) -> str:
     - valid 항목 있음: 최신 valid의 `kind verdict`
     
     순서: recorded_at chronological comparison, 동점이면 리스트 위치 우선 (append-only).
+    
+    Valid entry rules:
+    - kind in {fixed, exploratory}
+    - verdict in {pass, fail, blocked}
+    - evidence: non-empty string
+    - recorded_at: parsable (ISO 8601 or YAML date/datetime)
+    - ref: non-empty string when kind=fixed
     """
     from datetime import datetime, timezone
     
@@ -402,18 +409,25 @@ def verification_cell(entries) -> str:
             continue
         kind = entry.get("kind", "")
         verdict = entry.get("verdict", "")
+        evidence = entry.get("evidence")
+        recorded_at = entry.get("recorded_at")
+        ref = entry.get("ref")
+        
         # Check required fields
         if kind not in ("fixed", "exploratory"):
             continue
         if verdict not in ("pass", "fail", "blocked"):
             continue
-        if not entry.get("evidence"):
+        # evidence must be non-empty string
+        if not isinstance(evidence, str) or not evidence:
             continue
-        if not entry.get("recorded_at"):
+        # recorded_at must be parsable
+        if normalize_timestamp(recorded_at) is None:
             continue
-        # ref is required for fixed
-        if kind == "fixed" and "ref" not in entry:
+        # ref must be non-empty string when kind=fixed
+        if kind == "fixed" and (not isinstance(ref, str) or not ref):
             continue
+        
         valid.append((idx, entry))
     
     # If entries exist but none valid → invalid

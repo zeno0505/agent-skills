@@ -89,6 +89,116 @@ def slim(task, fields):
     return {key: task[key] for key in fields if key in task}
 
 
+def normalize_timestamp_query(value):
+    """recorded_at를 aware datetime으로 파싱한다 (query.py 버전, render.py와 동일).
+    
+    ISO 8601 timestamp (date-only, naive, or with offset) 또는 Python date/datetime 객체를
+    aware datetime으로 변환하여 chronological comparison 가능하게 한다.
+    
+    - date-only (2026-10-10) → start of day UTC
+    - naive datetime → treat as UTC
+    - aware datetime → as-is
+    - unparsable → None (oldest)
+    
+    Returns: aware datetime or None
+    """
+    from datetime import datetime, timezone
+    
+    if value is None:
+        return None
+    
+    # Python date object
+    if hasattr(value, "year") and not hasattr(value, "hour"):
+        from datetime import datetime, timezone
+        return datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
+    
+    # Python datetime object
+    if hasattr(value, "isoformat") and hasattr(value, "hour"):
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value
+    
+    # String: parse ISO 8601
+    if isinstance(value, str):
+        try:
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=timezone.utc)
+            return dt
+        except (ValueError, AttributeError):
+            return None
+    
+    return None
+
+
+def verification_summary(entries):
+    """태스크의 verification 상태를 요약한다 (render.py와 동일한 로직).
+    
+    Returns:
+    - None: 레코드 없음 (빈 리스트 or None)
+    - "invalid": 항목 있지만 전부 invalid
+    - "kind verdict": 최신 valid의 kind와 verdict (예: "fixed pass")
+    
+    Valid entry rules (render.py와 동일):
+    - kind in {fixed, exploratory}
+    - verdict in {pass, fail, blocked}
+    - evidence: non-empty string
+    - recorded_at: parsable (ISO 8601 or YAML date/datetime)
+    - ref: non-empty string when kind=fixed
+    """
+    from datetime import datetime, timezone
+    
+    if not isinstance(entries, list) or not entries:
+        return None
+    
+    has_any_entries = len(entries) > 0
+    
+    # Filter valid entries
+    valid = []
+    for idx, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            continue
+        kind = entry.get("kind", "")
+        verdict = entry.get("verdict", "")
+        evidence = entry.get("evidence")
+        recorded_at = entry.get("recorded_at")
+        ref = entry.get("ref")
+        
+        # Check required fields (same as render.py)
+        if kind not in ("fixed", "exploratory"):
+            continue
+        if verdict not in ("pass", "fail", "blocked"):
+            continue
+        # evidence must be non-empty string
+        if not isinstance(evidence, str) or not evidence:
+            continue
+        # recorded_at must be parsable
+        if normalize_timestamp_query(recorded_at) is None:
+            continue
+        # ref must be non-empty string when kind=fixed
+        if kind == "fixed" and (not isinstance(ref, str) or not ref):
+            continue
+        
+        valid.append((idx, entry))
+    
+    # If entries exist but none valid → invalid
+    if has_any_entries and not valid:
+        return "invalid"
+    
+    if not valid:
+        return None
+    
+    # Sort by (parsed recorded_at, list position)
+    latest_idx, latest = max(
+        valid,
+        key=lambda item: (normalize_timestamp_query(item[1].get("recorded_at", "")) or datetime.min.replace(tzinfo=timezone.utc), item[0])
+    )
+    
+    kind = latest.get("kind", "")
+    verdict = latest.get("verdict", "")
+    return f"{kind} {verdict}"
+
+
 def schema_version(data) -> int:
     """2 = 회차(rounds) 모델, 1 = 태스크당 PR 을 쌓던 구 스키마."""
     if data.get("schema") == 2 or isinstance(data.get("rounds"), list):
@@ -390,8 +500,15 @@ def cmd_index(tasks, args):
         selected = [t for t in selected if str(t.get("status")) not in unwanted]
     if args.limit:
         selected = selected[: args.limit]
+    # Add verification summary to each task
+    output = []
+    for t in selected:
+        entry = slim(t, fields)
+        # Add verification summary (same logic as render.py)
+        entry["verification"] = verification_summary(t.get("verification", []))
+        output.append(entry)
     note(f"{len(selected)}/{len(tasks)}건, 필드 {', '.join(fields)}")
-    emit([slim(t, fields) for t in selected])
+    emit(output)
 
 
 def cmd_ready(tasks, done_status):
@@ -406,12 +523,14 @@ def cmd_ready(tasks, done_status):
             if status_of.get(dep) != done_status
         ]
         entry = slim(task, ["id", "title", "status"])
+        # Add verification summary
+        entry["verification"] = verification_summary(task.get("verification", []))
         if blockers:
             entry["blocked_by"] = blockers
             waiting.append(entry)
         else:
             ready.append(entry)
-    note(f"완료로 본 상태: {done_status} — 착수 가능 {len(ready)}건, 의존 대기 {len(waiting)}건")
+    note(f"준비됨 {len(ready)}건, 대기 중 {len(waiting)}건")
     emit({"ready": ready, "waiting": waiting})
 
 
