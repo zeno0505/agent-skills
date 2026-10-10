@@ -27,6 +27,7 @@ ln -sfn ~/.agents/skills ~/.claude/skills   # Claude Code — 기존 디렉터�
 | [`minimal-design-review`](skills/minimal-design-review) | 현재 설계에 군더더기가 없는지 서브에이전트에게 반박시켜 확인하는 최소 설계 검토 | — | 0.1.0 |
 | [`figma-mapping-interview`](skills/figma-mapping-interview) | Figma 노드↔실제 DOM 요소 매핑을 인터뷰로 확정 | Figma 접근(MCP 등) | 0.1.0 |
 | [`cross-agent-review`](skills/cross-agent-review) | 한 에이전트의 결론을 다른 에이전트 세션이 독립 검증 | [Orca](#외부-도구) `orca` CLI (없으면 수동 전달) | 0.1.0 |
+| [`author-voice`](skills/author-voice) | 사람 이름으로 나가는 글(블로그·슬랙·팀 공유)을 작성자 원문에서 만든 말투 가이드에 맞춤 — 문장 끝·연결어·1인칭·채널 노트·남은 관례 문체 기계 점검. 초안 스킬들의 말투 단일 기준 | (선택) ripgrep | 0.1.0 |
 | [`slack-reply-draft`](skills/slack-reply-draft) | 스레드 맥락을 읽고 사용자가 직접 붙여 넣을 슬랙 답글 초안 작성 (보내지 않음) | 슬랙 읽기 도구 | 0.1.0 |
 | [`weekly-lesson-draft`](skills/weekly-lesson-draft) | 회고 교훈으로 주간 블로그 초안 작성, 작성자 승인 게이트 | — | 0.1.0 |
 | [`weekly-lesson-publish`](skills/weekly-lesson-publish) | 승인본을 GitHub Pages 블로그 저장소에 발행 | git, gh | 0.1.0 |

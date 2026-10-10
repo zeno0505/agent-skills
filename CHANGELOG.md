@@ -4,12 +4,9 @@
 
 ## [Unreleased]
 
-### Changed
-
-- `weekly-lesson-draft` — 「말투 가이드」 절 추가. 글의 목소리를 블로그 관례인 평서 `~다` 서술체가 아니라 작성자의 평소 채팅 말투(존댓말이면 `~합니다/~데요/~봅니다`, 1인칭 `저/제`)로 맞추도록 규칙화. 말투 1차 패스에 남은 `~다.` 서술문을 기계적으로 훑는 단계, 세 패스 자가체크의 말투 기준도 같이 갱신.
-
 ### Added
 
+- `author-voice` — 사람 이름으로 나가는 글(블로그, 슬랙 글·답글, 팀 공유)의 목소리를 작성자 본인 말투로 맞추는 공용 스킬. 작성자 원문 메시지에서 말투 가이드를 만드는 절차(관찰 항목 표 → 기본값/가끔/금지 → ✗/○ 쌍 → 작성자 확인), 존댓말 기본값 예시, 채널 노트(블로그 제목 평서형 허용, 슬랙은 짧게·그 자리 실제 글 우선, 비개발 청중은 청중 관점), 남은 `~다.` 서술문·금지형 기계 점검. 에이전트 자신의 답장 말투에는 쓰지 않는다.
 - DAG 스택 — 태스크별 `verification` 필드: 각 태스크의 검증 실행 기록을 남기는 선택 리스트. 각 항목은 `kind`(fixed | exploratory), `ref`(TC 경로 또는 설명), `verdict`(pass | fail | blocked), `evidence`(해당 실행의 영구 링크), `recorded_at`(ISO 8601 타임스탬프)를 갖는다. `fixed`는 고정 입력(시드 + TC, 선택적으로 앵커 인벤토리)으로 재현 가능하고, `exploratory`는 러너가 시작 상태와 기준을 선택한다. 신뢰 차이는 도구가 아니라 고정 입력에서 온다 — 같은 러너(예: agent-browser)를 두 방식 모두에 쓸 수 있다.
   - `plan-dag-stack` — 스키마 문서에 `verification[]` 필드 정의와 예시, `kind`/`ref`/`verdict`/`evidence`/`recorded_at` 필드 설명 추가. `recorded_at`는 date-only 또는 full timestamp 지원 (ISO 8601). 최신 항목 선택: recorded_at로 정렬, 동점이면 리스트 위치가 늦을수록 우선 (append-only). Backward compatibility 절 추가: 필드 없는 구 dag.yaml은 유효하며 빈 리스트로 취급. Append-only 규칙 명시.
   - `receive-dag-stack` — 구현자 보고에서 검증 결과를 읽어 `verification` 스냅샷 기록. 새 항목은 기존 리스트에 **append** (`set.py --append-item verification`). 보고에 검증 결과가 없으면 아무것도 추가하지 않고 기존 이력을 보존. 절대 기존 항목을 덮어쓰거나 삭제하지 않음. Verification Snapshot 절 추가.
@@ -17,6 +14,11 @@
   - `read-dag-stack` — `query.py`: 모든 태스크 출력에 `verification` 필드 포함, 하위 호환(필드 없으면 빈 리스트 `[]`로 기본값 설정). load() 함수에서 태스크 추출 시 자동 적용.
   - `show-dag-stack` — `render.py`: Verification 열 추가 (가장 최근 항목의 kind와 verdict 요약, 예: `fixed pass`, `exploratory fail`, `fixed blocked`). 없으면 `—`. 타임스탬프 정규화 및 순서 정의 구현. 잘못된 항목(non-dict, 필수 키 누락, 알 수 없는 kind/verdict) 방어 코딩: 건너뛰며 render 크래시 방지. SKILL.md에 Verification 열 설명 추가.
   - `set-dag-stack` — `set.py`: `--append-item verification` 지원 및 validation 추가 (kind ∈ {fixed, exploratory}, verdict ∈ {pass, fail, blocked}, evidence/recorded_at 필수, ref는 fixed일 때 필수). SKILL.md에 verification append 예시 추가.
+
+### Changed
+
+- `weekly-lesson-draft` — 말투 규칙을 `author-voice`로 옮기고 포인터와 한 줄 요약만 남김. 목소리는 블로그 관례 평서 `~다` 서술체가 아니라 작성자의 평소 채팅 말투(존댓말이면 `~합니다/~데요/~봅니다`, `저/제`). 말투 1차 패스·세 패스 자가체크도 `author-voice`의 기계 점검을 따르도록 갱신.
+- `slack-reply-draft` — 말투 규칙을 `author-voice` 단일 기준으로 연결(그 자리 사용자 최근 글 우선은 유지). 전달 전에 기계 점검 단계 추가.
 
 ## [0.4.0] - 2026-10-10
 
