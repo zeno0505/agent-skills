@@ -4,6 +4,32 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-10
+
+DAG 스택에 PR 리스크 티어 시스템(상/중/하)을 추가했습니다. 리뷰어(CodeRabbit 또는 로컬 리뷰 에이전트)가 각 라운드 PR의 리스크를 평가하고 머지 권장 사항을 제공합니다.
+
+### Added
+
+- `references/pr-risk-tiers.md` — PR 리스크 티어 가이드라인 문서. 티어 정의(상/중/하), 결정론적 시그널 설정(`risk_config`), 리뷰 라운드 제한과의 통합, 머지 권장 로직, 후속 피드백 루프를 설명.
+- `plan-dag-stack` — 스키마에 `risk_config` 최상위 필드 추가 (선택): `critical_paths`, `critical_files`, `max_diff_lines`로 결정론적 시그널을 정의하여 `상` 티어를 강제할 수 있음. 없으면 리뷰어 판단만 사용.
+- `plan-dag-stack` — 스키마의 `rounds[]` 엔트리에 4개 필드 추가: `risk_tier` (상/중/하), `risk_reason` (한 줄 사유), `risk_signals` (발화한 시그널 목록), `risk_assessed_by` (평가자 이름). 첫 리뷰 후 기록, 없으면 `null`.
+- `review-dag-stack` — 첫 리뷰 후 리스크 티어 평가 단계 추가. 결정론적 시그널 확인 → 리뷰어 판단 → 기록. 승인 시 티어와 리뷰 라운드 카운트에 따라 머지 권장 생성 (하/1라운드 클린 → 권장, 중/2라운드 크리티컬 없음 → 권장, 상 → 사람 리뷰 필수).
+- `read-dag-stack/scripts/query.py` — `--pr` 출력에 리스크 필드 4개 포함 (`null`이면 명시).
+- `show-dag-stack/scripts/render.py` — 회차 표에 리스크 열 추가. 티어와 사유(40자 이내)를 함께 표시, 없으면 `—`.
+- `run-dag-stack` — 라운드 종료 제안 시 `--pr` 출력(리스크 티어 포함)을 같이 보고하도록 명시.
+
+### Changed
+
+- `review-dag-stack` — frontmatter `description`에 리스크 평가 언급 추가. Process 단계 재번호: 리스크 평가가 step 3, 승인 처리가 step 4, 머지 권장이 승인 안에 통합. Constraints에 리스크 평가 제약 추가 (첫 리뷰만, 리뷰어가 평가, 시그널 강제, 권장이지 자동 머지 아님).
+- `plan-dag-stack` — Schema 절에 `risk_config`와 `rounds[]` 신규 필드 문서화. 역호환성: 선택 필드이므로 기존 파일은 그대로 동작.
+- README — 아직 업데이트 안 함 (스킬 목록 버전은 개별 스킬 변경이 아니라 전체 배포 시점에 올림).
+
+### Backward Compatibility
+
+- `risk_config` 없는 기존 `dag.yaml` → 결정론적 시그널 비활성, 리뷰어 판단만 사용.
+- `risk_tier` 등 4개 필드가 `null`인 라운드 → "평가 안 됨"으로 처리, 기존 2라운드 제한은 여전히 동작.
+- 기존 스킬(`read-dag-stack`, `show-dag-stack`, `track-dag-stack`)은 신규 필드 무시하고 정상 동작.
+
 ## [0.3.2] - 2026-10-10
 
 macOS에서 외부 에이전트(Claude Code 헤드리스)로 `video-making`을 처음부터 끝까지 돌려 본 결과와 반복 영상·PDF 운영 피드백을 반영했습니다(`video-making` 0.1.2, `pdf-report` 0.1.1).

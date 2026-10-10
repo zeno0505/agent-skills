@@ -65,6 +65,15 @@ project:
   project_path: "acme/web/profile-avatar"
   note_dir: "docs/note"
 
+risk_config:             # optional. When absent, deterministic risk signals are disabled
+  critical_paths:        # glob patterns for critical code areas (force 상 tier)
+    - "src/payment/**"
+    - "src/auth/**"
+  critical_files:        # glob patterns for critical files (force 상 tier)
+    - "**/schema.sql"
+    - "**/*.proto"
+  max_diff_lines: 500    # changed lines threshold (force 상 tier when exceeded)
+
 project_policy:          # an open list. Required keys: base_branch, verification.
   - key: base_branch
     decided_at: "2026-08-27"
@@ -102,6 +111,23 @@ phases:
           reason: ""               # why, when required is false
 ```
 
+### `risk_config` (optional, top-level)
+
+Defines deterministic signals that **force** a round to `상` (high) risk tier regardless of
+reviewer judgment. When this field is absent, all deterministic signals are disabled and risk
+tier relies solely on reviewer assessment.
+
+- **`critical_paths`**: list of glob patterns (repository root-relative). Examples:
+  `"src/payment/**"`, `"src/auth/**"`, `"src/subscription/**"`. Any changed file matching a
+  pattern fires this signal.
+- **`critical_files`**: list of glob patterns for specific critical files. Examples:
+  `"**/schema.sql"`, `"**/migrations/*.sql"`, `"**/*.proto"`. File name alone can match.
+- **`max_diff_lines`**: integer. If the round's diff (additions + deletions) exceeds this
+  threshold, fire this signal.
+
+See [`../review-dag-stack/references/pr-risk-tiers.md`](../review-dag-stack/references/pr-risk-tiers.md) for the full risk tier
+system and how these signals are used.
+
 ### `rounds[]` entry
 
 ```yaml
@@ -112,6 +138,10 @@ phases:
   state: planned        # planned | open | approved | merged
   approved_sha: null    # commit_id of coderabbitai[bot]'s APPROVED review
   last_pushed_sha: null
+  risk_tier: null       # 상 / 중 / 하, assessed after first review (see review-dag-stack)
+  risk_reason: null     # one-line justification for the tier
+  risk_signals: null    # list of deterministic signal names that fired, e.g., ["critical_paths"]
+  risk_assessed_by: null  # "CodeRabbit" or the review agent's name
 ```
 
 ### Statuses

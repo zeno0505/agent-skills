@@ -236,6 +236,8 @@ def cmd_rounds(data):
     entries = rounds_of(data)
     if not entries:
         note("rounds 가 없습니다 — 구 스키마이거나 아직 회차를 열지 않았습니다")
+    else:
+        note(f"{len(entries)}개 회차")
     emit(entries)
 
 
@@ -250,6 +252,10 @@ def cmd_pr(data, tasks):
     payload = dict(entry)
     payload["tasks"] = members
     payload["task_counts"] = _counts([t for t in tasks if t.get("round") == number])
+    # Include risk assessment fields if present
+    for field in ["risk_tier", "risk_reason", "risk_signals", "risk_assessed_by"]:
+        if field not in payload:
+            payload[field] = None
     emit(payload)
 
 
