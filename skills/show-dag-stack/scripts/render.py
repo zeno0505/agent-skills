@@ -381,9 +381,9 @@ def normalize_timestamp(value):
 def verification_cell(entries) -> str:
     """태스크의 verification 상태를 한 칸으로 줄인다.
 
-    - 레코드 없음 (빈 리스트 or None): `—`
-    - 항목 있지만 전부 invalid: `invalid`
-    - valid 항목 있음: 최신 valid의 `kind verdict`
+    - No record (missing or null): `—`
+    - Malformed (non-list or all entries invalid): `invalid`
+    - Valid entries exist: 최신 valid의 `kind verdict`
     
     순서: recorded_at chronological comparison, 동점이면 리스트 위치 우선 (append-only).
     
@@ -396,7 +396,16 @@ def verification_cell(entries) -> str:
     """
     from datetime import datetime, timezone
     
-    if not isinstance(entries, list) or not entries:
+    # Missing or null -> no record
+    if entries is None:
+        return "—"
+    
+    # Non-list -> invalid (malformed data)
+    if not isinstance(entries, list):
+        return "invalid"
+    
+    # Empty list -> no record
+    if not entries:
         return "—"
     
     # entries가 있는지 확인 (empty list vs entries exist)

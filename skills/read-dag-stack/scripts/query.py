@@ -66,11 +66,8 @@ def load(path: Path):
         print("[dag-query] Error: dag.yaml 이 비었거나 매핑이 아닙니다")
         sys.exit(1)
     tasks = [t for phase in data.get("phases", []) or [] for t in phase.get("tasks", []) or []]
-    # Ensure verification field exists with default [] for backward compatibility
-    # Treat missing, null, and non-list as []
-    for task in tasks:
-        if not isinstance(task.get("verification"), list):
-            task["verification"] = []
+    # Do NOT normalize verification here - let verification_summary() handle it
+    # This preserves original malformed data for inspection via --task
     return raw, data, tasks
 
 
@@ -135,9 +132,9 @@ def verification_summary(entries):
     """태스크의 verification 상태를 요약한다 (render.py와 동일한 로직).
     
     Returns:
-    - None: 레코드 없음 (빈 리스트 or None)
-    - "invalid": 항목 있지만 전부 invalid
-    - "kind verdict": 최신 valid의 kind와 verdict (예: "fixed pass")
+    - None: no verification record (missing or null)
+    - "invalid": entries exist but malformed (non-list, or all entries invalid)
+    - "kind verdict": the latest valid entry's kind and verdict (e.g., "fixed pass")
     
     Valid entry rules (render.py와 동일):
     - kind in {fixed, exploratory}
@@ -148,7 +145,16 @@ def verification_summary(entries):
     """
     from datetime import datetime, timezone
     
-    if not isinstance(entries, list) or not entries:
+    # Missing or null -> no record
+    if entries is None:
+        return None
+    
+    # Non-list -> invalid (malformed data)
+    if not isinstance(entries, list):
+        return "invalid"
+    
+    # Empty list -> no record
+    if not entries:
         return None
     
     has_any_entries = len(entries) > 0

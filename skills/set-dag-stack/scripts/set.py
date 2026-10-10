@@ -303,6 +303,8 @@ def main():
     parser.add_argument("--yaml", action="store_true", help="값을 YAML 로 해석 (리스트·매핑·숫자·null)")
     parser.add_argument("--expect", metavar="FIELD=VALUE", help="현재 값이 다르면 중단")
     parser.add_argument("--dry-run", action="store_true", help="쓰지 않고 바뀔 내용만 본다")
+    parser.add_argument("--force-verification-rewrite", action="store_true", 
+                        help="verification 필드를 --set/--remove-field 로 덮어쓰기 허용 (사람 전용, append-only 우회)")
     args = parser.parse_args()
 
     path = Path(args.path)
@@ -422,6 +424,18 @@ def main():
 
     block_start, block_end, key_indent = find_task_block(lines, args.task)
     field = args.set or args.append_item or args.remove_field
+    
+    # Block --set and --remove-field for verification (append-only)
+    if field == "verification" and (args.set or args.remove_field):
+        if args.force_verification_rewrite:
+            # Allow with explicit escape flag (human-only, documented)
+            pass
+        else:
+            action = "--remove-field" if args.remove_field else "--set"
+            fail(f"verification 은 append-only 입니다 — {action} 대신 --append-item verification 을 쓰세요. "
+                 f"(History 를 의도적으로 덮어쓰려면 --force-verification-rewrite 를 추가하세요. "
+                 f"이것은 사람이 직접 쓸 때만 허용됩니다.)")
+    
     span = find_field_range(lines, block_start, block_end, key_indent, field)
 
     if args.remove_field:

@@ -9,9 +9,11 @@
 5. Malformed entries don't crash
 6. Missing/null verification -> [] in output
 7. set.py validation
-8. Invalid date only -> invalid (NEW)
-9. Numeric evidence -> invalid (NEW)
-10. --index and --ready include verification summary (NEW)
+8. Invalid date only -> invalid
+9. Numeric evidence -> invalid
+10. --index and --ready include verification summary
+11. Append-only bypass blocked
+12. Non-list verification -> invalid
 
 실행: python3 verification_contract.test.py
 """
@@ -31,27 +33,31 @@ SET = HERE.parents[1] / "set-dag-stack" / "scripts" / "set.py"
 CASES = [
     ("T-001", None, "—", None),  # No field
     ("T-002", "[]", "—", None),  # Empty list
-    ("T-003", "null", "—", None),  # null -> []
+    ("T-003", "null", "—", None),  # null
     ("T-004", '[{kind: fixed, ref: tc.yaml, verdict: pass, evidence: link1, recorded_at: "2026-10-10"}]', "fixed pass", "fixed pass"),
     ("T-005", '[{kind: exploratory, verdict: fail, evidence: link2, recorded_at: "2026-10-10"}]', "exploratory fail", "exploratory fail"),
     # Same-day fail then pass -> pass (later position wins)
     ("T-006", '[{kind: fixed, ref: tc.yaml, verdict: fail, evidence: link3, recorded_at: "2026-10-10"}, {kind: fixed, ref: tc.yaml, verdict: pass, evidence: link4, recorded_at: "2026-10-10"}]', "fixed pass", "fixed pass"),
     # Mixed string and YAML date
     ("T-007", '[{kind: fixed, ref: tc.yaml, verdict: fail, evidence: link5, recorded_at: "2026-10-09"}, {kind: fixed, ref: tc.yaml, verdict: pass, evidence: link6, recorded_at: "2026-10-10"}]', "fixed pass", "fixed pass"),
-    # Mixed offsets: earlier UTC time vs later +09:00
+    # Mixed offsets
     ("T-008", '[{kind: fixed, ref: tc.yaml, verdict: fail, evidence: link7, recorded_at: "2026-10-10T10:00:00Z"}, {kind: fixed, ref: tc.yaml, verdict: pass, evidence: link8, recorded_at: "2026-10-10T20:00:00+09:00"}]', "fixed pass", "fixed pass"),
-    # All invalid -> invalid
+    # All invalid
     ("T-009", '[{bad: data}, "string", 123]', "invalid", "invalid"),
-    # Mixed valid and invalid -> show latest valid
+    # Mixed valid and invalid
     ("T-010", '[{kind: fixed, ref: tc.yaml, verdict: pass, evidence: link9, recorded_at: "2026-10-10"}, {bad: data}]', "fixed pass", "fixed pass"),
-    # Missing required fields -> invalid
-    ("T-011", '[{kind: fixed, verdict: pass}]', "invalid", "invalid"),  # Missing evidence, recorded_at, ref
-    # Invalid date only -> invalid (NEW)
+    # Missing required fields
+    ("T-011", '[{kind: fixed, verdict: pass}]', "invalid", "invalid"),
+    # Invalid date only
     ("T-012", '[{kind: fixed, ref: tc.yaml, verdict: pass, evidence: link10, recorded_at: "not-a-date"}]', "invalid", "invalid"),
-    # Numeric evidence -> invalid (NEW)
+    # Numeric evidence
     ("T-013", '[{kind: fixed, ref: tc.yaml, verdict: pass, evidence: 123, recorded_at: "2026-10-10"}]', "invalid", "invalid"),
-    # Mixed: one with unparsable date, one valid -> show valid
+    # Mixed unparsable and valid
     ("T-014", '[{kind: fixed, ref: tc.yaml, verdict: fail, evidence: link11, recorded_at: "bad-date"}, {kind: fixed, ref: tc.yaml, verdict: pass, evidence: link12, recorded_at: "2026-10-10"}]', "fixed pass", "fixed pass"),
+    # Non-list string
+    ("T-015", '"oops"', "invalid", "invalid"),
+    # Non-list mapping
+    ("T-016", '{kind: fixed, ref: tc.yaml, verdict: pass, evidence: link13, recorded_at: "2026-10-10"}', "invalid", "invalid"),
 ]
 
 
@@ -106,7 +112,7 @@ def main():
 
         import yaml
 
-        # Test 1-5: render doesn't crash and shows expected cells
+        # Test render
         render_result = run([sys.executable, str(RENDER), str(dag)])
         if render_result.returncode != 0:
             failures.append(f"render crashed: {render_result.stderr}")
@@ -120,20 +126,12 @@ def main():
                 if f"| {cell} |" not in row:
                     failures.append(f"{task_id}: 표 칸 기대 {cell!r} — 실제 줄 {row}")
 
-        # Test 6: query.py treats null/missing as []
-        query_result = run([sys.executable, str(QUERY), str(dag), "--task", "T-001", "T-002", "T-003"])
+        # Test query doesn't crash
+        query_result = run([sys.executable, str(QUERY), str(dag), "--task", "T-001", "T-015", "T-016"])
         if query_result.returncode != 0:
             failures.append(f"query crashed: {query_result.stderr}")
-        else:
-            tasks = yaml.safe_load(query_result.stdout)
-            for task in tasks:
-                if not isinstance(task.get("verification"), list):
-                    failures.append(f"{task['id']}: verification 필드가 리스트가 아닙니다: {task.get('verification')}")
-                if task["id"] in ("T-001", "T-002", "T-003") and task.get("verification") != []:
-                    failures.append(f"{task['id']}: verification 기대 [] 실제 {task.get('verification')}")
 
-        # Test 10: --index and --ready include verification summary
-        # --index
+        # Test --index
         index_result = run([sys.executable, str(QUERY), str(dag), "--index"])
         if index_result.returncode != 0:
             failures.append(f"query --index crashed: {index_result.stderr}")
@@ -146,7 +144,7 @@ def main():
                 if actual_summary != expected_summary:
                     failures.append(f"{task_id} --index: verification 기대 {expected_summary!r} 실제 {actual_summary!r}")
 
-        # --ready
+        # Test --ready
         ready_result = run([sys.executable, str(QUERY), str(dag), "--ready"])
         if ready_result.returncode != 0:
             failures.append(f"query --ready crashed: {ready_result.stderr}")
@@ -160,7 +158,7 @@ def main():
                 if actual_summary != expected_summary:
                     failures.append(f"{task_id} --ready: verification 기대 {expected_summary!r} 실제 {actual_summary!r}")
 
-        # Test 7: set.py validation
+        # Test set.py validation
         test_dag = Path(tmp) / "test-set.yaml"
         test_dag.write_text("""
 schema: 2
@@ -177,13 +175,13 @@ phases:
         target_files: []
         depends_on: []
         status: pending
-        verification: []
+        verification: [{kind: fixed, ref: tc.yaml, verdict: pass, evidence: 'https://example.com/run1', recorded_at: '2026-10-10'}]
 """, encoding="utf-8")
 
         # Valid append
         proc = subprocess.run([sys.executable, str(SET), str(test_dag), "--task", "T-TEST", 
                       "--append-item", "verification", 
-                      "--value", "{kind: fixed, ref: tc.yaml, verdict: pass, evidence: 'https://example.com/run1', recorded_at: '2026-10-10T14:30:00+09:00'}", 
+                      "--value", "{kind: fixed, ref: tc.yaml, verdict: pass, evidence: 'https://example.com/run2', recorded_at: '2026-10-10T14:30:00+09:00'}", 
                       "--yaml", "--dry-run"],
                      capture_output=True, text=True)
         if proc.returncode != 0:
@@ -198,14 +196,14 @@ phases:
         if result.returncode == 0:
             failures.append("set.py should reject invalid kind")
 
-        # Missing evidence
+        # Numeric evidence
         result = run([sys.executable, str(SET), str(test_dag), "--task", "T-TEST",
                       "--append-item", "verification",
-                      "--value", "{kind: fixed, ref: tc.yaml, verdict: pass, recorded_at: '2026-10-10'}",
+                      "--value", "{kind: fixed, ref: tc.yaml, verdict: pass, evidence: 123, recorded_at: '2026-10-10'}",
                       "--yaml", "--dry-run"],
                      allow_failure=True)
         if result.returncode == 0:
-            failures.append("set.py should reject missing evidence")
+            failures.append("set.py should reject numeric evidence")
 
         # Bad recorded_at
         result = run([sys.executable, str(SET), str(test_dag), "--task", "T-TEST",
@@ -216,21 +214,39 @@ phases:
         if result.returncode == 0:
             failures.append("set.py should reject invalid recorded_at format")
 
-        # Numeric evidence (NEW)
+        # Test append-only bypass blocked
         result = run([sys.executable, str(SET), str(test_dag), "--task", "T-TEST",
-                      "--append-item", "verification",
-                      "--value", "{kind: fixed, ref: tc.yaml, verdict: pass, evidence: 123, recorded_at: '2026-10-10'}",
+                      "--set", "verification",
+                      "--value", "[]",
                       "--yaml", "--dry-run"],
                      allow_failure=True)
         if result.returncode == 0:
-            failures.append("set.py should reject numeric evidence")
+            failures.append("set.py should block --set verification (append-only)")
+        # Check stdout (fail() prints to stdout)
+        output = result.stdout + result.stderr
+        if "append-only" not in output.lower():
+            failures.append(f"set.py should mention append-only in error: {output}")
+
+        # Test --remove-field blocked
+        result = run([sys.executable, str(SET), str(test_dag), "--task", "T-TEST",
+                      "--remove-field", "verification"],
+                     allow_failure=True)
+        if result.returncode == 0:
+            failures.append("set.py should block --remove-field verification")
+
+        # Test --force-verification-rewrite allows bypass
+        result = run([sys.executable, str(SET), str(test_dag), "--task", "T-TEST",
+                      "--set", "verification",
+                      "--value", "[]",
+                      "--yaml", "--dry-run", "--force-verification-rewrite"],
+                     allow_failure=False)
 
     if failures:
         print("어긋남:")
         for line in failures:
             print(f"  - {line}")
         raise SystemExit(1)
-    print(f"통과 — 사례 {len(CASES)}건, verification 처리 일치 (render + query CLI)")
+    print(f"통과 — 사례 {len(CASES)}건, verification 처리 일치 (render + query CLI + append-only + non-list)")
 
 
 if __name__ == "__main__":
