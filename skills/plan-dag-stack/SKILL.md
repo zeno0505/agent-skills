@@ -46,8 +46,9 @@ reads them and QA and CI have no note vault. This skill neither creates nor read
 7. Specify inter-task dependencies with `depends_on`. Stop if there is a cyclic dependency.
 8. Propose an `e2e` field for each task and **get the user's approval before writing it**
    (see *Proposing E2E coverage*).
-9. Write `dag.yaml` via `set-dag-stack`: create the file with `schema: 2`, `project_policy`,
-   and an empty `rounds: []`. Use `set.py --top` for top-level keys and `--add-task` for tasks.
+9. Write `dag.yaml` via `set-dag-stack`: create the file with `set.py --init` (canonical
+   `schema: 2` skeleton with `project_policy` and an empty `rounds: []`), add phases with
+   `--add-phase`, tasks with `--add-task`, and other top-level keys with `--top`.
 10. Create `e2e-checklist.md` with a header if it does not exist.
 11. Run `show-dag-stack` to render `dag.md`.
 

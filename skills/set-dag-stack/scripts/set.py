@@ -23,6 +23,9 @@ Usage:
   set.py [path] --round-add --value-file - --yaml
   set.py [path] --round 1 --set state --value merged
   set.py [path] --top schema --value 2 --yaml
+  set.py [path] --init --repo owner/repo --project-path my-project --base-branch feature/x/main \
+         --verification "pnpm typecheck" --verification "pnpm eslint" [--phase feature] [--force]
+  set.py [path] --add-phase cleanup
 옵션: --dry-run(쓰지 않고 diff 만), --expect FIELD=VALUE(현재 값이 다르면 중단)
 """
 
@@ -111,6 +114,81 @@ def write_toplevel(path, lines, doc, expected, stat, key, value, dry_run, label)
     else:
         start, end = span
     commit(path, lines, start, end, chunk, expected, stat, dry_run, label)
+
+
+def skeleton(args, today):
+    """--init 이 쓰는 schema 2 정본 골격. plan-dag-stack 의 스키마와 키 순서를 맞춘다."""
+    policy_base = {"key": "base_branch", "decided_at": today, "decision": args.base_branch}
+    if args.rationale:
+        policy_base["rationale"] = args.rationale
+    policy_base["legacy"] = False
+    return {
+        "schema": 2,
+        "legacy": False,
+        "project": {
+            "repo": args.repo,
+            "project_path": args.project_path,
+            "note_dir": args.note_dir,
+        },
+        "project_policy": [
+            policy_base,
+            {"key": "verification", "decided_at": today,
+             "decision": list(args.verification), "legacy": False},
+        ],
+        "rounds": [],
+        "phases": [{"name": args.phase or "feature", "tasks": []}],
+    }
+
+
+def init_file(path: Path, args):
+    missing = [flag for flag, value in (("--repo", args.repo), ("--project-path", args.project_path),
+                                        ("--base-branch", args.base_branch),
+                                        ("--verification", args.verification)) if not value]
+    if missing:
+        fail("--init 에는 " + ", ".join(missing) + " 가 필요합니다 (base_branch 는 추측하지 말고 물어보세요)")
+    if path.exists() and path.read_text(encoding="utf-8").strip() and not args.force:
+        fail(f"{path} 가 이미 비어 있지 않습니다 — 덮어쓰려면 --force 를 붙이세요")
+    from datetime import date
+    doc = skeleton(args, date.today().isoformat())
+    new_raw = "".join(render(doc, 0))
+    if yaml.safe_load(new_raw) != doc:
+        fail("골격이 왕복 검증을 통과하지 못했습니다")
+    print(f"[dag-set] schema 2 골격 생성 (phase '{doc['phases'][0]['name']}')")
+    for line in new_raw.splitlines():
+        print("  + " + line)
+    if args.dry_run:
+        print("[dag-set] --dry-run 이라 쓰지 않았습니다")
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle = tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=str(path.parent), prefix=".dag-set-", delete=False
+    )
+    with handle:
+        handle.write(new_raw)
+    os.replace(handle.name, path)
+    print(f"[dag-set] 기록했습니다: {path}")
+
+
+def find_phase_block(lines, name):
+    """phase 리스트 항목(- name: X)의 줄 범위와 키 들여쓰기."""
+    head = re.compile(r"^(\s*)- name:\s*['\"]?" + re.escape(str(name)) + r"['\"]?\s*(#.*)?$")
+    span = find_toplevel_range(lines, "phases")
+    lo, hi = span if span else (0, len(lines))
+    for index in range(lo, hi):
+        match = head.match(lines[index])
+        if not match:
+            continue
+        key_indent = len(match.group(1)) + 2
+        end = index + 1
+        while end < hi:
+            stripped = lines[end].strip()
+            if stripped and not stripped.startswith("#"):
+                indent = len(lines[end]) - len(lines[end].lstrip())
+                if indent < key_indent:
+                    break
+            end += 1
+        return index, end, key_indent
+    fail(f"phase {name} 의 위치를 찾을 수 없습니다")
 
 
 def all_tasks(doc):
@@ -304,7 +382,17 @@ def main():
     mode.add_argument("--policy-deprecate", metavar="KEY", help="정책 항목을 legacy: true 로 접는다")
     mode.add_argument("--round-add", action="store_true", help="rounds 에 회차를 넣는다")
     mode.add_argument("--top", metavar="KEY", help="최상위 키 하나를 넣거나 바꾼다 (phases 제외)")
-    parser.add_argument("--phase", help="--add-task 대상 phase 이름 (기본: 마지막 phase)")
+    mode.add_argument("--init", action="store_true", help="schema 2 정본 골격으로 dag.yaml 을 처음 만든다")
+    mode.add_argument("--add-phase", metavar="NAME", help="phases 끝에 빈 phase 를 넣는다")
+    parser.add_argument("--phase", help="--add-task 대상 phase (기본: 마지막) / --init 첫 phase (기본: feature)")
+    parser.add_argument("--repo", help="--init: project.repo (owner/repo)")
+    parser.add_argument("--project-path", help="--init: project.project_path")
+    parser.add_argument("--note-dir", default="docs/note", help="--init: project.note_dir (기본 docs/note)")
+    parser.add_argument("--base-branch", help="--init: base_branch 정책 결정값 (필수)")
+    parser.add_argument("--rationale", help="--init: base_branch 정책 rationale (선택)")
+    parser.add_argument("--verification", action="append", default=[],
+                        help="--init: verification 정책 명령 (여러 번 지정, 최소 1개)")
+    parser.add_argument("--force", action="store_true", help="--init: 비어 있지 않은 파일도 덮어쓴다")
     parser.add_argument("--round", type=int, metavar="N", help="--set 대상 회차 번호")
     parser.add_argument("--superseded-by", metavar="KEY", help="--policy-deprecate 가 가리킬 후속 정책")
     parser.add_argument("--value", help="값 (한 줄일 때)")
@@ -317,6 +405,9 @@ def main():
     args = parser.parse_args()
 
     path = Path(args.path)
+    if args.init:
+        init_file(path, args)
+        return
     raw, lines, doc, stat = load(path)
     expected = copy.deepcopy(doc)
 
@@ -326,6 +417,33 @@ def main():
         value = read_value(args)
         write_toplevel(path, lines, doc, expected, stat, args.top, value,
                        args.dry_run, f"최상위 {args.top} 설정")
+        return
+
+    if args.add_phase:
+        phases = doc.get("phases")
+        if phases is not None and not isinstance(phases, list):
+            fail("phases 가 리스트가 아닙니다")
+        phases = phases or []
+        if any(isinstance(p, dict) and p.get("name") == args.add_phase for p in phases):
+            fail(f"phase {args.add_phase} 는 이미 있습니다")
+        new_phase = {"name": args.add_phase, "tasks": []}
+        expected["phases"] = list(expected.get("phases") or []) + [new_phase]
+        span = find_toplevel_range(lines, "phases")
+        if span is None or not phases:
+            # phases 가 없거나 비었으면(`phases: []`) 블록을 통째로 다시 쓴다
+            chunk = render({"phases": [new_phase]}, 0)
+            start, end = span if span else (len(lines), len(lines))
+        else:
+            item_indent = next(len(l) - len(l.lstrip()) for l in lines[span[0] + 1:span[1]]
+                               if l.lstrip().startswith("- "))
+            chunk = render([new_phase], item_indent)
+            start = end = span[1]
+            while end > span[0] + 1 and not lines[end - 1].strip():
+                start = end = end - 1
+        if start == len(lines) and lines and not lines[-1].endswith("\n"):
+            lines = lines[:-1] + [lines[-1] + "\n"]
+        commit(path, lines, start, end, chunk, expected, stat, args.dry_run,
+               f"phase '{args.add_phase}' 추가")
         return
 
     if args.policy_add:
@@ -406,14 +524,22 @@ def main():
         target = next((p for p in phases if p.get("name") == args.phase), phases[-1] if phases else None)
         if target is None:
             fail("phase 를 찾을 수 없습니다")
-        last = target["tasks"][-1]
-        block_start, block_end, key_indent = find_task_block(lines, last["id"])
-        chunk = render([new_task], key_indent - 2)
         for phase in expected["phases"]:
             if phase.get("name") == target.get("name"):
-                phase["tasks"].append(new_task)
-        commit(path, lines, block_end, block_end, chunk, expected, stat, args.dry_run,
-               f"{new_task['id']} 를 phase '{target.get('name')}' 에 추가")
+                phase["tasks"] = list(phase.get("tasks") or []) + [new_task]
+        label = f"{new_task['id']} 를 phase '{target.get('name')}' 에 추가"
+        if target.get("tasks"):
+            last = target["tasks"][-1]
+            block_start, block_end, key_indent = find_task_block(lines, last["id"])
+            chunk = render([new_task], key_indent - 2)
+            commit(path, lines, block_end, block_end, chunk, expected, stat, args.dry_run, label)
+        else:
+            # 빈 phase(`tasks: []`, `tasks:` 또는 키 없음) — tasks 필드만 통째로 다시 쓴다
+            p_start, p_end, p_indent = find_phase_block(lines, target.get("name"))
+            span = find_field_range(lines, p_start, p_end, p_indent, "tasks")
+            chunk = render({"tasks": [new_task]}, p_indent)
+            start, end = span if span else (p_end, p_end)
+            commit(path, lines, start, end, chunk, expected, stat, args.dry_run, label)
         return
 
     if args.remove_task:
