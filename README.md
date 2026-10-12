@@ -15,6 +15,31 @@ for d in ~/src/agent-skills/skills/*/; do ln -sfn "$d" ~/.agents/skills/"$(basen
 ln -sfn ~/.agents/skills ~/.claude/skills   # Claude Code — 기존 디렉터리가 있으면 개별 링크로
 ```
 
+Codex 는 `~/.agents/skills` 를 직접 읽으므로 `~/.codex/skills` 에 따로 링크하지 않습니다. 같은 스킬이 두 곳에 있으면 목록에 중복으로 뜹니다.
+
+### 자동 업데이트
+
+`scripts/sync.sh` 는 클론을 `origin/main` 으로 fast-forward 하고, 새 스킬은 `~/.agents/skills`(및 `~/.claude/skills`)에 링크하고, 저장소에서 빠진 스킬의 링크는 지웁니다. 실제 디렉터리와 다른 곳을 가리키는 링크는 건드리지 않습니다. 클론이 `main` 이 아니거나 변경이 있으면 pull 은 건너뜁니다 — 스킬 수정은 브랜치에서 하고 PR 로 합칩니다.
+
+macOS 에서는 launchd 로 매일 한 번(그리고 로그인할 때) 돌립니다. 잠자기 중이라 놓친 실행은 깨어날 때 이어서 돕니다.
+
+```bash
+cat > ~/Library/LaunchAgents/io.github.zeno0505.agent-skills-sync.plist <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>io.github.zeno0505.agent-skills-sync</string>
+  <key>ProgramArguments</key><array><string>$HOME/src/agent-skills/scripts/sync.sh</string></array>
+  <key>RunAtLoad</key><true/>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
+  <key>StandardOutPath</key><string>$HOME/Library/Logs/agent-skills-sync.log</string>
+  <key>StandardErrorPath</key><string>$HOME/Library/Logs/agent-skills-sync.log</string>
+</dict></plist>
+EOF
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/io.github.zeno0505.agent-skills-sync.plist
+launchctl kickstart gui/$(id -u)/io.github.zeno0505.agent-skills-sync   # 지금 한 번 실행
+```
+
 필요한 스킬만 골라 링크해도 됩니다. 단, DAG 스택 스킬은 서로의 스크립트를 부르므로 **11개를 함께** 설치하세요. 계획 전 요구사항을 모으는 `collect-dag-stack`과 서브에이전트 실행 계약 `receive-dag-stack`도 같이 두는 것을 권합니다.
 
 ## 스킬 목록
