@@ -6,6 +6,8 @@
 
 ### Added
 
+- `set-dag-stack` — `set.py --init`: 새 `dag.yaml` 을 plan-dag-stack 의 `schema: 2` 정본 골격(`schema`, `legacy`, `project`, 필수 정책 `base_branch`·`verification`, `rounds: []`, 빈 phase 하나)으로 만든다. `--repo`·`--project-path`·`--base-branch`·`--verification`(반복) 필수, `--phase`·`--note-dir`·`--rationale` 선택. 없는 상위 디렉터리는 만들고, 비어 있지 않은 파일은 `--force` 없이는 덮어쓰지 않는다. `--add-phase NAME`: phases 끝에 빈 phase 추가(phases 가 없거나 `[]` 여도 동작). `init_contract.test.py` 추가. `plan-dag-stack` 9단계를 `--init`/`--add-phase` 기준으로 갱신.
+
 - `scripts/sync.sh` — 클론을 `origin/main` 으로 fast-forward 하고 `~/.agents/skills`·`~/.claude/skills` 의 스킬별 링크를 맞추는 동기화 스크립트. 새 스킬은 링크, 저장소에서 빠진 스킬의 끊긴 링크는 정리, 실제 디렉터리와 외부 링크는 보존. `main` 이 아니거나 작업 트리에 변경이 있으면 pull 을 건너뜀. README 에 launchd 하루 주기 등록 예시 추가.
 - `author-voice` — 사람 이름으로 나가는 글(블로그, 슬랙 글·답글, 팀 공유)의 목소리를 작성자 본인 말투로 맞추는 공용 스킬. 작성자 원문 메시지에서 말투 가이드를 만드는 절차(관찰 항목 표 → 기본값/가끔/금지 → ✗/○ 쌍 → 작성자 확인), 존댓말 기본값 예시, 채널 노트(블로그 제목 평서형 허용, 슬랙은 짧게·그 자리 실제 글 우선, 비개발 청중은 청중 관점), 남은 `~다.` 서술문·금지형 기계 점검. 에이전트 자신의 답장 말투에는 쓰지 않는다.
 - DAG 스택 — 태스크별 `verification` 필드: 각 태스크의 검증 실행 기록을 남기는 선택 리스트. 각 항목은 `kind`(fixed | exploratory), `ref`(TC 경로 또는 설명), `verdict`(pass | fail | blocked), `evidence`(해당 실행의 영구 링크), `recorded_at`(ISO 8601 타임스탬프)를 갖는다. `fixed`는 고정 입력(시드 + TC, 선택적으로 앵커 인벤토리)으로 재현 가능하고, `exploratory`는 러너가 시작 상태와 기준을 선택한다. 신뢰 차이는 도구가 아니라 고정 입력에서 온다 — 같은 러너(예: agent-browser)를 두 방식 모두에 쓸 수 있다.
@@ -15,6 +17,11 @@
   - `read-dag-stack` — `query.py`: 모든 태스크 출력에 `verification` 필드 포함, 하위 호환(필드 없으면 빈 리스트 `[]`로 기본값 설정). load() 함수에서 태스크 추출 시 자동 적용.
   - `show-dag-stack` — `render.py`: Verification 열 추가 (가장 최근 항목의 kind와 verdict 요약, 예: `fixed pass`, `exploratory fail`, `fixed blocked`). 없으면 `—`. 타임스탬프 정규화 및 순서 정의 구현. 잘못된 항목(non-dict, 필수 키 누락, 알 수 없는 kind/verdict) 방어 코딩: 건너뛰며 render 크래시 방지. SKILL.md에 Verification 열 설명 추가.
   - `set-dag-stack` — `set.py`: `--append-item verification` 지원 및 validation 추가 (kind ∈ {fixed, exploratory}, verdict ∈ {pass, fail, blocked}, evidence/recorded_at 필수, ref는 fixed일 때 필수). SKILL.md에 verification append 예시 추가.
+
+### Fixed
+
+- `set-dag-stack` — 빈 phase(`tasks: []`)에 `--add-task` 하면 IndexError 로 죽던 문제. 이제 해당 phase 의 `tasks` 필드만 다시 쓴다.
+- `set-dag-stack` — `--add-task --phase <없는 이름>` 이 조용히 마지막 phase 에 태스크를 넣던 문제. 이제 있는 phase 목록을 보여 주고 중단한다.
 
 ### Changed
 

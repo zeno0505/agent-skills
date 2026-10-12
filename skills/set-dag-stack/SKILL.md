@@ -35,12 +35,37 @@ python3 ~/.agents/skills/set-dag-stack/scripts/set.py [dag_path] --task <ID> <mo
 | `--append-item FIELD` | append one item to a list field, leaving existing items untouched |
 | `--remove-field FIELD` | delete the field |
 | `--remove-task <ID>` | delete the whole task (no `--task` needed) |
-| `--add-task --phase <name>` | append a task to that phase (default: last phase) |
+| `--add-task --phase <name>` | append a task to that phase (default: last phase; an unknown name aborts) |
 | `--policy-add` | append an item to `project_policy` (value must be a mapping with `key`) |
 | `--policy-deprecate KEY [--superseded-by KEY]` | mark a policy `legacy: true`, keeping it in the file |
 | `--round-add` | append a round (value must be a mapping with `number`) |
 | `--round N --set FIELD` | change one field of round `N` |
 | `--top KEY` | set a top-level key other than `phases` (e.g. `schema`, `legacy`) |
+| `--init` | create a new `dag.yaml` from the canonical `schema: 2` skeleton (no `--task`) |
+| `--add-phase NAME` | append an empty phase (`tasks: []`) to `phases` |
+
+## Creating a new dag.yaml
+
+Always start a new DAG with `--init` instead of writing the file by hand, so every DAG begins
+from the same structure as the `plan-dag-stack` schema: `schema: 2`, `legacy: false`,
+`project`, `project_policy` with the required `base_branch` and `verification` keys,
+`rounds: []`, and one empty phase.
+
+```bash
+set.py notes/my-project/dag.yaml --init \
+  --repo owner/repo --project-path my-project \
+  --base-branch feature/my-project/main \
+  --verification "pnpm typecheck" --verification "pnpm eslint" \
+  [--phase feature] [--note-dir docs/note] [--rationale "why this branch"]
+set.py notes/my-project/dag.yaml --add-phase cleanup
+```
+
+- `--repo`, `--project-path`, `--base-branch`, and at least one `--verification` are required.
+  Ask the user for `base_branch`; do not guess.
+- Missing parent directories are created. An existing **non-empty** file is never overwritten
+  unless you add `--force`; an empty file is filled in.
+- `--phase` names the first phase (default `feature`). Add more with `--add-phase`.
+- `--add-task` works on an empty phase, so the next step is just adding tasks.
 
 `--policy-*`, `--round-*`, and `--top` rewrite their whole top-level block rather than one line.
 Those blocks are small, and rewriting them is what makes editing an item's single field safe.
@@ -91,7 +116,12 @@ evidence: https://notion.so/project/runs#row-abc123
 recorded_at: "2026-10-10T14:30:00+09:00"
 EOF
 
-# 새 태스크
+# 새 dag.yaml (정본 골격) → phase 추가 → 첫 태스크
+set.py notes/my-project/dag.yaml --init --repo owner/repo --project-path my-project \
+  --base-branch feature/my-project/main --verification "pnpm typecheck"
+set.py notes/my-project/dag.yaml --add-phase cleanup
+
+# 새 태스크 (빈 phase 에도 가능)
 set.py --add-task --phase feature --value-file new-task.yaml --yaml
 ```
 
