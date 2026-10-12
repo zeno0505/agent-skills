@@ -521,9 +521,15 @@ def main():
         if any(t.get("id") == new_task["id"] for t in all_tasks(doc)):
             fail(f"{new_task['id']} 는 이미 있습니다")
         phases = doc.get("phases", [])
-        target = next((p for p in phases if p.get("name") == args.phase), phases[-1] if phases else None)
-        if target is None:
-            fail("phase 를 찾을 수 없습니다")
+        if args.phase is not None:
+            target = next((p for p in phases if p.get("name") == args.phase), None)
+            if target is None:
+                names = ", ".join(str(p.get("name")) for p in phases) or "없음"
+                fail(f"phase {args.phase} 를 찾을 수 없습니다 (있는 phase: {names}) — 먼저 --add-phase 로 만드세요")
+        else:
+            target = phases[-1] if phases else None
+            if target is None:
+                fail("phase 가 없습니다 — 먼저 --add-phase 로 만드세요")
         for phase in expected["phases"]:
             if phase.get("name") == target.get("name"):
                 phase["tasks"] = list(phase.get("tasks") or []) + [new_task]

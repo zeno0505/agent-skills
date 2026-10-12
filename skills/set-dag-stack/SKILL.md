@@ -35,7 +35,7 @@ python3 ~/.agents/skills/set-dag-stack/scripts/set.py [dag_path] --task <ID> <mo
 | `--append-item FIELD` | append one item to a list field, leaving existing items untouched |
 | `--remove-field FIELD` | delete the field |
 | `--remove-task <ID>` | delete the whole task (no `--task` needed) |
-| `--add-task --phase <name>` | append a task to that phase (default: last phase) |
+| `--add-task --phase <name>` | append a task to that phase (default: last phase; an unknown name aborts) |
 | `--policy-add` | append an item to `project_policy` (value must be a mapping with `key`) |
 | `--policy-deprecate KEY [--superseded-by KEY]` | mark a policy `legacy: true`, keeping it in the file |
 | `--round-add` | append a round (value must be a mapping with `number`) |

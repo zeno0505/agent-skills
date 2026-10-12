@@ -21,6 +21,7 @@
 ### Fixed
 
 - `set-dag-stack` — 빈 phase(`tasks: []`)에 `--add-task` 하면 IndexError 로 죽던 문제. 이제 해당 phase 의 `tasks` 필드만 다시 쓴다.
+- `set-dag-stack` — `--add-task --phase <없는 이름>` 이 조용히 마지막 phase 에 태스크를 넣던 문제. 이제 있는 phase 목록을 보여 주고 중단한다.
 
 ### Changed
 

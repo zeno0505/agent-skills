@@ -8,7 +8,8 @@
 5. 손으로 넣은 `phases: [{name, tasks: []}]` 블록 표기에도 --add-task
 6. --add-phase: 기존 phases 뒤, phases 없음, 중복 거절
 7. 생성 파일이 query.py / render.py 로 읽힘
-8. 기존 동작(태스크가 있는 phase 에 --add-task) 유지
+8. 없는 --phase 는 마지막 phase 로 새지 않고 중단
+9. 기존 동작(태스크가 있는 phase 에 --add-task) 유지
 
 실행: python3 init_contract.test.py
 """
@@ -112,6 +113,12 @@ with tempfile.TemporaryDirectory() as tmp:
     check("add-phase on phases: []", r.returncode == 0 and
           yaml.safe_load(inline.read_text())["phases"] == [{"name": "feature", "tasks": []}],
           r.stdout + r.stderr)
+
+    before = empty.read_text()
+    r = run(empty, "--add-task", "--phase", "nope", "--value-file", "-", "--yaml",
+            stdin="id: T-099\ntitle: x\n")
+    check("add-task to unknown phase refused", r.returncode != 0 and empty.read_text() == before,
+          r.stdout)
 
     # 7
     q = subprocess.run([sys.executable, str(QUERY), str(empty), "--task", "T-002"],
