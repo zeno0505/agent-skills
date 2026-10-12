@@ -6,6 +6,7 @@
 
 ### Added
 
+- `scripts/sync.sh` — 클론을 `origin/main` 으로 fast-forward 하고 `~/.agents/skills`·`~/.claude/skills` 의 스킬별 링크를 맞추는 동기화 스크립트. 새 스킬은 링크, 저장소에서 빠진 스킬의 끊긴 링크는 정리, 실제 디렉터리와 외부 링크는 보존. `main` 이 아니거나 작업 트리에 변경이 있으면 pull 을 건너뜀. README 에 launchd 하루 주기 등록 예시 추가.
 - `author-voice` — 사람 이름으로 나가는 글(블로그, 슬랙 글·답글, 팀 공유)의 목소리를 작성자 본인 말투로 맞추는 공용 스킬. 작성자 원문 메시지에서 말투 가이드를 만드는 절차(관찰 항목 표 → 기본값/가끔/금지 → ✗/○ 쌍 → 작성자 확인), 존댓말 기본값 예시, 채널 노트(블로그 제목 평서형 허용, 슬랙은 짧게·그 자리 실제 글 우선, 비개발 청중은 청중 관점), 남은 `~다.` 서술문·금지형 기계 점검. 에이전트 자신의 답장 말투에는 쓰지 않는다.
 - DAG 스택 — 태스크별 `verification` 필드: 각 태스크의 검증 실행 기록을 남기는 선택 리스트. 각 항목은 `kind`(fixed | exploratory), `ref`(TC 경로 또는 설명), `verdict`(pass | fail | blocked), `evidence`(해당 실행의 영구 링크), `recorded_at`(ISO 8601 타임스탬프)를 갖는다. `fixed`는 고정 입력(시드 + TC, 선택적으로 앵커 인벤토리)으로 재현 가능하고, `exploratory`는 러너가 시작 상태와 기준을 선택한다. 신뢰 차이는 도구가 아니라 고정 입력에서 온다 — 같은 러너(예: agent-browser)를 두 방식 모두에 쓸 수 있다.
   - `plan-dag-stack` — 스키마 문서에 `verification[]` 필드 정의와 예시, `kind`/`ref`/`verdict`/`evidence`/`recorded_at` 필드 설명 추가. `recorded_at`는 date-only 또는 full timestamp 지원 (ISO 8601). 최신 항목 선택: recorded_at로 정렬, 동점이면 리스트 위치가 늦을수록 우선 (append-only). Backward compatibility 절 추가: 필드 없는 구 dag.yaml은 유효하며 빈 리스트로 취급. Append-only 규칙 명시.
