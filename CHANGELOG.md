@@ -7,6 +7,7 @@
 ### Added
 
 - `memo-triage` — 떠오른 생각을 실행으로 이어 주는 메모 처리 스킬. 포착(원문 보존, 리마인드 시각 해석 규칙) → 의견(업무는 출처 달린 맥락, 기술은 근거 있는 자기 의견, 끝에 실행안) → 결정·실행(권한 밖은 승인 대기, 멈출 때 실행 기록 남김) → 리마인드 발송(다시 읽고 한 번만) → 개인 채팅 수집(에이전트 메시지는 `🔔`/`🤖` 접두어로 구분해 건너뜀, 원문 링크로 중복 제거). 실행 주체가 바뀌어도 이어받을 수 있게 쓰기 규칙(다시 읽기·덧붙이기·서명)을 둠.
+- `daily-retro-draft` — 일일 회고 초안 스킬. 채팅 활동과 로컬 worktree 커밋을 관측해 프로젝트별 정리·교훈 후보(근거 링크 필수)를 회고 DB에 쓰고, 사용자 답을 원문 그대로 옮겨 교훈을 확정한다. 활동이 없으면 페이지를 만들지 않고, 같은 날짜 페이지는 하나만 둔다. 공개 교훈은 `weekly-lesson-draft`로 넘김.
 - `set-dag-stack` — `set.py --init`: 새 `dag.yaml` 을 plan-dag-stack 의 `schema: 2` 정본 골격(`schema`, `legacy`, `project`, 필수 정책 `base_branch`·`verification`, `rounds: []`, 빈 phase 하나)으로 만든다. `--repo`·`--project-path`·`--base-branch`·`--verification`(반복) 필수, `--phase`·`--note-dir`·`--rationale` 선택. 없는 상위 디렉터리는 만들고, 비어 있지 않은 파일은 `--force` 없이는 덮어쓰지 않는다. `--add-phase NAME`: phases 끝에 빈 phase 추가(phases 가 없거나 `[]` 여도 동작). `init_contract.test.py` 추가. `plan-dag-stack` 9단계를 `--init`/`--add-phase` 기준으로 갱신.
 
 - `scripts/sync.sh` — 클론을 `origin/main` 으로 fast-forward 하고 `~/.agents/skills`·`~/.claude/skills` 의 스킬별 링크를 맞추는 동기화 스크립트. 새 스킬은 링크, 저장소에서 빠진 스킬의 끊긴 링크는 정리, 실제 디렉터리와 외부 링크는 보존. `main` 이 아니거나 작업 트리에 변경이 있으면 pull 을 건너뜀. README 에 launchd 하루 주기 등록 예시 추가.

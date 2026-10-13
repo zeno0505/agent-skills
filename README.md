@@ -55,6 +55,7 @@ launchctl kickstart gui/$(id -u)/io.github.zeno0505.agent-skills-sync   # 지금
 | [`author-voice`](skills/author-voice) | 사람 이름으로 나가는 글(블로그·슬랙·팀 공유)을 작성자 원문에서 만든 말투 가이드에 맞춤 — 문장 끝·연결어·1인칭·채널 노트·남은 관례 문체 기계 점검. 초안 스킬들의 말투 단일 기준 | (선택) ripgrep | 0.1.0 |
 | [`slack-reply-draft`](skills/slack-reply-draft) | 스레드 맥락을 읽고 사용자가 직접 붙여 넣을 슬랙 답글 초안 작성 (보내지 않음) | 슬랙 읽기 도구 | 0.1.0 |
 | [`memo-triage`](skills/memo-triage) | 떠오른 생각을 메모 DB에 받아 업무/기술로 나누고 맥락·의견·실행안을 붙여 실행까지 이어 감 — 리마인드 발송·개인 채팅 수집 포함, 위치는 런타임 지침에서 받음 | 문서 DB 쓰기 도구(노션 MCP 등), (선택) 슬랙 읽기·쓰기 도구 | 0.1.0 |
+| [`daily-retro-draft`](skills/daily-retro-draft) | 그날 채팅·로컬 작업을 관측해 프로젝트별 정리와 교훈 후보로 회고 초안을 만들고, 사용자 답으로 교훈 확정 — 활동 없으면 만들지 않음 | 채팅 읽기 도구, 문서 DB 쓰기 도구, git | 0.1.0 |
 | [`weekly-lesson-draft`](skills/weekly-lesson-draft) | 회고 교훈으로 주간 블로그 초안 작성, 작성자 승인 게이트 | — | 0.1.0 |
 | [`weekly-lesson-publish`](skills/weekly-lesson-publish) | 승인본을 GitHub Pages 블로그 저장소에 발행 | git, gh | 0.1.0 |
 | [`notion-qa-triage`](skills/notion-qa-triage) | 노션 프로젝트의 열린 QA를 기획·디자인 확인 / 설계 고민 / 수정 방향 명확 / 사용자 직접 확인(첨부 미열람) 넷으로 나누고 다음 처리 제안 | 노션 읽기 도구(MCP 등) | 0.1.0 |
