@@ -20,12 +20,22 @@ if [ "$branch" != main ]; then
 elif [ -n "$(git status --porcelain)" ]; then
   log "working tree has changes — pull skipped"
 else
+  # launchd runs a missed job on the next wake, often a dark wake with no network yet.
+  # Retry the fetch instead of failing; give up quietly and try again on the next run.
+  tries=${SYNC_FETCH_TRIES:-5} wait=${SYNC_FETCH_WAIT:-60} n=1 fetched=1
+  until err=$(git fetch -q origin main 2>&1); do
+    if [ "$n" -ge "$tries" ]; then
+      log "fetch failed after $tries tries — pull skipped: $(printf '%s' "$err" | tail -1)"; fetched=0; break
+    fi
+    log "fetch failed ($n/$tries), retrying in ${wait}s: $(printf '%s' "$err" | tail -1)"
+    sleep "$wait"; n=$((n + 1))
+  done
   before=$(git rev-parse HEAD)
-  git fetch -q origin main
-  git merge -q --ff-only origin/main
-  after=$(git rev-parse HEAD)
-  if [ "$before" = "$after" ]; then log "up to date ($(git rev-parse --short HEAD))"
-  else log "updated $(git rev-parse --short "$before")..$(git rev-parse --short "$after")"; fi
+  if [ "$fetched" = 0 ]; then :
+  elif ! err=$(git merge -q --ff-only origin/main 2>&1); then
+    log "fast-forward failed — pull skipped: $(printf '%s' "$err" | tail -1)"
+  elif [ "$before" = "$(git rev-parse HEAD)" ]; then log "up to date ($(git rev-parse --short HEAD))"
+  else log "updated $(git rev-parse --short "$before")..$(git rev-parse --short HEAD)"; fi
 fi
 
 mkdir -p "$agents"

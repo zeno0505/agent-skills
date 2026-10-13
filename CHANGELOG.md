@@ -20,6 +20,7 @@
 
 ### Fixed
 
+- `scripts/sync.sh` — launchd 가 놓친 실행을 네트워크가 아직 없는 다크 웨이크 때 돌리면 fetch 가 DNS 오류로 실패하고 시각 없는 git 오류만 남긴 채 exit 128 로 끝나던 문제. 이제 fetch 를 재시도하고(기본 5회·60초 간격, `SYNC_FETCH_TRIES`·`SYNC_FETCH_WAIT` 로 조정), 끝내 실패하거나 fast-forward 가 안 되면 시각이 찍힌 로그를 남기고 pull 만 건너뛴 채 링크 정리는 계속한다.
 - `set-dag-stack` — 빈 phase(`tasks: []`)에 `--add-task` 하면 IndexError 로 죽던 문제. 이제 해당 phase 의 `tasks` 필드만 다시 쓴다.
 - `set-dag-stack` — `--add-task --phase <없는 이름>` 이 조용히 마지막 phase 에 태스크를 넣던 문제. 이제 있는 phase 목록을 보여 주고 중단한다.
 
